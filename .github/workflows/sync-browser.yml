@@ -1,0 +1,43 @@
+name: Synchronize MH Browser source backup
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/sync-browser.yml'
+  workflow_dispatch:
+  schedule:
+    - cron: '23 * * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mh-browser-pc-backup
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out backup repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Synchronize full source from MH Browser
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch main https://github.com/hammadshaukatpk-art/MH-Browser.git /tmp/mh-browser-original
+          SOURCE_SHA="$(git -C /tmp/mh-browser-original rev-parse HEAD)"
+          test -f /tmp/mh-browser-original/app/src/main/java/com/mh/browser/BrowserActivity.java
+          rsync -a --delete --exclude='.git/' --exclude='.github/workflows/sync-browser.yml' /tmp/mh-browser-original/ ./
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "Sync MH Browser source from ${SOURCE_SHA}"
+            git push origin HEAD:main
+          fi
+          diff -qr --exclude=.git --exclude=sync-browser.yml /tmp/mh-browser-original/ ./
+          echo "Verified complete backup of MH Browser commit ${SOURCE_SHA}"
