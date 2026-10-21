@@ -153,3 +153,8 @@ body.light .media-choice-icon,body.light .download-file-icon{background:#d8eafa}
 body.light .download-progress{background:#d6e2f2}
 body.light .download-actions button{background:#f3f7ff}
 body.light .download-actions button:hover{background:#e3efff}
+
+/* Native PiP access is visible when the current page has playable video. */
+#pipButton{flex:0 0 auto;min-width:60px!important;height:34px!important;padding:0 9px;font-size:12px!important;font-weight:700;border:1px solid var(--accent);background:var(--item);color:var(--text);white-space:nowrap}
+#pipButton:hover{background:var(--hover);box-shadow:0 0 0 1px var(--accent)}
+body.light #pipButton{color:#16365b;background:#e3f0ff;border-color:#237dd1}
