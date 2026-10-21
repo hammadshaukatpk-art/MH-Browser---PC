@@ -47,3 +47,10 @@ nav{gap:5px;padding-inline:12px}nav>button{flex:none}#addressForm{margin:0 3px;m
 .entry .actions button{min-height:34px}.date-control input{font:inherit;accent-color:var(--accent)}
 @media(max-width:950px){#extensionTools{max-width:65px}#media{font-size:11px!important}nav{gap:2px;padding-inline:5px}nav>button{min-width:30px;padding-inline:4px}#addressForm{min-width:100px}}
 @media(max-width:700px){#extensionTools{display:none}#extensionsButton{display:none}#favorite{display:none}}
+
+/* Android MH parity: readable, aligned desktop menu and selection rows */
+.menu-row{min-height:55px;grid-template-columns:28px minmax(0,1fr) auto;padding:9px 11px;gap:12px;border-bottom:1px solid var(--edge);border-radius:8px}
+.menu-title-wrap{display:flex;flex-direction:column;min-width:0;gap:3px;text-align:left}.menu-title-wrap .menu-title{font-size:13px;font-weight:600}.menu-description{display:block;color:var(--muted);font-size:11px;line-height:1.25;white-space:normal}.menu-shortcut{align-self:center}
+.history-group{display:flex;align-items:center;justify-content:space-between;padding:11px 6px 6px;color:var(--accent)}.history-group strong{font-size:13px}.history-group button{font-size:11px;padding:6px 8px}
+.history-entry,#panelContent>div:has(>.entry){display:flex;align-items:flex-start;gap:8px;min-width:0}.history-entry>.entry,#panelContent>div:has(>.entry)>.entry{flex:1;min-width:0}.history-entry>input[type=checkbox],#panelContent>div:has(>.entry)>input[type=checkbox]{margin:18px 2px 0 4px;accent-color:var(--accent);width:16px;height:16px}
+#panelContent>.filter{gap:7px}#panelContent>.filter .secondary{border-radius:9px}.entry{overflow-wrap:anywhere}
