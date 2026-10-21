@@ -14,7 +14,7 @@ function overlayScript(enabled){
         queued=false;
         if(!document.documentElement)return;
         const visible=!!video()&&!!document.pictureInPictureEnabled;
-        if(!visible){if(button)button.hidden=true;return}
+        if(!visible){if(button)button.style.setProperty('display','none','important');return}
         if(!button){
           button=document.createElement('button');
           button.type='button';
@@ -34,7 +34,7 @@ function overlayScript(enabled){
             }catch(err){button.title='PiP unavailable: '+(err?.message||String(err))}
           });
         }
-        button.hidden=false;
+        button.style.setProperty('display','flex','important');
         if(!button.isConnected)document.documentElement.appendChild(button);
       };
       const schedule=()=>{if(queued)return;queued=true;setTimeout(update,150)};
