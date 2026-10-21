@@ -56,8 +56,8 @@
       "perMachine": false,
       "allowElevation": false,
       "runAfterFinish": true,
-      "deleteAppDataOnUninstall": false,
-      "uninstallDisplayName": "MH Browser"
+      "deleteAppDataOnUninstall": true,
+      "uninstallDisplayName": "MH Browser — MasoomDev"
     },
     "extraResources": [
       {
