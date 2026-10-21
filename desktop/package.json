@@ -10,7 +10,7 @@
     "dist": "electron-builder --win nsis --publish never"
   },
   "devDependencies": {
-    "electron": "^33.4.11",
+    "electron": "44.9.3",
     "electron-builder": "^25.1.8"
   },
   "build": {
@@ -36,7 +36,8 @@
           ]
         }
       ],
-      "icon": "build/mh-browser.ico"
+      "icon": "build/mh-browser.ico",
+      "requestedExecutionLevel": "asInvoker"
     },
     "nsis": {
       "oneClick": true,
