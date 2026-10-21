@@ -39,6 +39,35 @@ jobs:
           Expand-Archive ffmpeg.zip -DestinationPath ffmpeg-unpacked
           Copy-Item (Get-ChildItem ffmpeg-unpacked -Recurse -Filter ffmpeg.exe | Select-Object -First 1).FullName media-tools/ffmpeg.exe
           Copy-Item (Get-ChildItem ffmpeg-unpacked -Recurse -Filter ffprobe.exe | Select-Object -First 1).FullName media-tools/ffprobe.exe
+      - name: Download verified public-site media component
+        shell: pwsh
+        run: |
+          $version = '2026.08.19'
+          $base = "https://github.com/yt-dlp/yt-dlp/releases/download/$version"
+          Invoke-WebRequest -Uri "$base/SHA2-256SUMS" -OutFile 'yt-dlp-checksums.txt'
+          Invoke-WebRequest -Uri "$base/yt-dlp.exe" -OutFile 'media-tools/yt-dlp.exe'
+          $checksums = Get-Content 'yt-dlp-checksums.txt' -Raw
+          $match = [regex]::Match($checksums, '(?m)^([0-9a-fA-F]{64})\s+\*?yt-dlp\.exe\s*
+        shell: pwsh
+        run: |
+          node --check main.js
+          node --check media.js
+          node --check site-media.js
+          node --check ui/app.js
+          if (-not (Test-Path 'ui/assets/mh-logo-clean.png')) { throw 'Clean logo not generated' }
+          if (-not (Test-Path 'build/mh-browser.ico')) { throw 'Windows icon not generated' }
+      - name: Build EXE setup
+        run: npm run dist
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: MH-Browser-Windows-Installer
+          path: desktop/dist/*.exe
+          if-no-files-found: error
+)
+          if (-not $match.Success) { throw 'yt-dlp checksum not found' }
+          $actual = (Get-FileHash 'media-tools/yt-dlp.exe' -Algorithm SHA256).Hash
+          if ($actual -ne $match.Groups[1].Value.ToUpperInvariant()) { throw 'yt-dlp SHA256 verification failed' }
       - name: Validate browser JavaScript and generated branding
         shell: pwsh
         run: |
