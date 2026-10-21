@@ -121,3 +121,35 @@ nav{gap:5px;padding-inline:12px}nav>button{flex:none}#addressForm{margin:0 3px;m
 .shortcut-add-label{font-size:12px;font-weight:650;line-height:1.4;white-space:nowrap;color:var(--text);text-align:center}
 .shortcut-add-symbol{display:grid;place-items:center;flex:1;width:100%;min-height:56px;font-size:38px;line-height:1;font-weight:300;color:var(--accent)}
 .shortcut.shortcut-add:hover{border-color:var(--accent);background:var(--hover)}
+
+/* Download manager: Chrome-inspired status cards without obscuring video playback */
+.download-header{display:flex;flex-direction:column;gap:8px;padding:8px 4px 15px;border-bottom:1px solid var(--edge)}
+.download-header>strong{font-size:17px;color:var(--text)}
+.download-header>small{font-size:12px;color:var(--muted);line-height:1.5}
+.download-folder-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.download-folder-actions button{background:var(--item);border:1px solid var(--edge);font-size:12px;padding:9px 12px;color:var(--text)}
+.download-card{margin:11px 0;padding:14px;background:var(--item);border:1px solid var(--edge);border-radius:14px;display:flex;flex-direction:column;gap:11px;min-width:0}
+.download-card-head{display:flex;gap:10px;align-items:center;min-width:0}
+.download-file-icon{display:grid;place-items:center;flex:0 0 34px;height:34px;background:#238cf126;border-radius:10px;color:var(--accent);font-size:19px}
+.download-name{font-size:13px;line-height:1.5;overflow-wrap:anywhere;min-width:0;color:var(--text)}
+.download-progress{width:100%;height:8px;overflow:hidden;border-radius:99px;background:var(--surface);border:1px solid var(--edge)}
+.download-progress-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#138bfa,#37d1ff);transition:width .25s ease}
+.download-detail{display:flex;gap:8px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;font-size:12px;line-height:1.4;color:var(--text)}
+.download-detail small{color:var(--muted);font-size:11px}
+.download-actions{display:flex;gap:6px;flex-wrap:wrap}
+.download-actions button{font-size:11px;background:var(--surface);border:1px solid var(--edge);color:var(--text);padding:8px 10px}
+.download-actions button:hover,.download-folder-actions button:hover{background:var(--hover);border-color:var(--accent)}
+.saved-page-url{font-size:11px;color:var(--muted);overflow-wrap:anywhere}
+.download-toast{position:fixed;z-index:11;top:105px;right:14px;max-width:320px;max-height:100px;overflow:hidden;padding:12px 16px;border:1px solid var(--accent);border-radius:12px;box-shadow:0 8px 28px var(--shadow);background:var(--panel);color:var(--text);font-size:12px;line-height:1.5;pointer-events:none}
+.downloads-toolbar{position:relative}
+#downloadCount{position:absolute;right:-4px;top:-3px;min-width:17px;height:17px;border-radius:50%;background:var(--accent);color:#fff;font-size:10px;line-height:17px;text-align:center;font-weight:750}
+#translateHint{flex:0 0 auto;padding:5px 7px;margin-left:5px;background:var(--item);border:1px solid var(--edge);border-radius:7px;color:var(--accent);font-size:16px}
+#translateHint:hover{border-color:var(--accent)}
+.shortcut-form{display:flex;flex-direction:column;gap:12px;margin:14px 0}
+.shortcut-form input{width:100%;padding:12px;border-radius:10px;background:var(--surface);border:1px solid var(--edge);color:var(--text)}
+.shortcut-form input::placeholder{color:var(--muted)}
+/* Improve contrast consistently in dark and light MH palettes */
+body.light .media-choice-icon,body.light .download-file-icon{background:#d8eafa}
+body.light .download-progress{background:#d6e2f2}
+body.light .download-actions button{background:#f3f7ff}
+body.light .download-actions button:hover{background:#e3efff}
