@@ -57,3 +57,10 @@ No browser engine can guarantee zero security risk. Release requirements: curren
 3. Never claim arbitrary video downloads are guaranteed. DRM, site access restrictions, and format compatibility remain limitations.
 4. Never claim Windows SmartScreen / Unknown Publisher prompts are fixed by changing the installer theme.
 5. Do not merge the feature branch to `main` until Windows installer CI and manual regression checks pass.
+
+## Follow-up UI and sign-in notes
+
+- Google G profile button opens a menu; Google-controlled WebAuthn/passkey challenges are not silently disabled. If Google allows an alternate password method, the user selects it on Google's page.
+- Back navigation from Google authentication prioritizes the initiating website, or MH home for direct home-page sign-in.
+- Settings use accessible expandable category groups, and About identifies MasoomDev and MH Developers.
+- NSIS guided uninstallation shows confirmation/progress; complete native dark wizard styling and signed publisher identity remain outstanding.
