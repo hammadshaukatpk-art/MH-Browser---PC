@@ -5,7 +5,7 @@ function themedDialog(kind,message,initial=''){return new Promise(resolve=>{
  const backdrop=$('dialogBackdrop'),title=$('dialogTitle'),body=$('dialogMessage'),input=$('dialogInput'),ok=$('dialogOK'),cancel=$('dialogCancel');
  title.textContent=kind==='prompt'?'MH Browser · Enter details':kind==='confirm'?'MH Browser · Confirmation':'MH Browser · Notice';
  body.textContent=String(message);input.hidden=kind!=='prompt';input.value=initial;cancel.hidden=kind==='alert';ok.textContent=kind==='alert'?'OK':kind==='prompt'?'Save':'Continue';
- backdrop.hidden=false;let done=false;const finish=result=>{if(done)return;done=true;backdrop.hidden=true;ok.onclick=null;cancel.onclick=null;document.removeEventListener('keydown',keys,true);resolve(result)};
+ backdrop.hidden=false;call('dialog-visible',true).catch(()=>{});let done=false;const finish=result=>{if(done)return;done=true;backdrop.hidden=true;call('dialog-visible',false).catch(()=>{});ok.onclick=null;cancel.onclick=null;document.removeEventListener('keydown',keys,true);resolve(result)};
  const keys=e=>{if(e.key==='Escape'){e.preventDefault();finish(kind==='prompt'?null:false)}if(e.key==='Enter'){e.preventDefault();finish(kind==='prompt'?input.value:true)}};
  ok.onclick=()=>finish(kind==='prompt'?input.value:true);cancel.onclick=()=>finish(kind==='prompt'?null:false);document.addEventListener('keydown',keys,true);(kind==='prompt'?input:ok).focus();
 })}
