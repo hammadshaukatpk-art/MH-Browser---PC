@@ -35,7 +35,8 @@
             "x64"
           ]
         }
-      ]
+      ],
+      "icon": "build/mh-browser.ico"
     },
     "nsis": {
       "oneClick": false,
@@ -43,7 +44,10 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "MH Browser",
-      "artifactName": "MH-Browser-Setup-${version}.${ext}"
+      "artifactName": "MH-Browser-Setup-${version}.${ext}",
+      "installerIcon": "build/mh-browser.ico",
+      "uninstallerIcon": "build/mh-browser.ico",
+      "installerHeaderIcon": "build/mh-browser.ico"
     },
     "extraResources": [
       {
@@ -52,6 +56,10 @@
         "filter": [
           "*.exe"
         ]
+      },
+      {
+        "from": "build/mh-browser.ico",
+        "to": "mh-browser.ico"
       }
     ]
   }
