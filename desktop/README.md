@@ -44,9 +44,19 @@ The existing Android application and source are the functional reference; do not
 
 ## October 21 desktop UI / installer revision
 
-- The Windows NSIS installer now uses a streamlined one-click flow with the MH app icon instead of the multi-step installation-options wizard. The setup/uninstaller still use Windows native dialogs, and an unsigned installer may trigger a Windows Unknown Publisher / Run warning. This cannot be removed by theme changes; production distribution requires trusted code signing and reputation.
+- The Windows NSIS installer now uses a guided installer/uninstaller wizard with confirmation and progress pages with the MH app icon instead of the multi-step installation-options wizard. The setup/uninstaller still use Windows native dialogs, and an unsigned installer may trigger a Windows Unknown Publisher / Run warning. This cannot be removed by theme changes; production distribution requires trusted code signing and reputation.
 - The CI branding step creates an alpha-masked 512px UI logo from the repository's existing 128px logo source and a 256px ICO. Upscaling improves display size and removes white corners, but it does not recreate the detail of the original full-resolution logo; replacing the source with the original high-resolution artwork remains recommended.
 - Browser menu panels, proxy form, confirmation/input dialogs, slim scrollbars, Instagram/Pinterest shortcuts and WhatsApp SVG were redesigned. Website permission prompts use the MH dialog UI. Native OS file dialogs remain native.
 - The toolbar includes a browser profile entry for opening Google sign-in, Gmail, YouTube and Google's sign-out page. This does **not** provide Chrome account synchronization, the signed-in Google account avatar/email, password sync, or guaranteed Google authentication on Electron; Google's sign-in policies can block embedded Chromium clients.
 - Installed compatible unpacked Chromium extensions are represented by toolbar icons and their action popups are attempted when supported. This does **not** enable universal Chrome Web Store one-click installs, complete extension API compatibility, or Chrome profile sync.
 - A successful installer build verifies packaging, not real Windows behavior. Test keyboard focus, tab rendering, streaming, website sign-in, extensions and native permissions on a Windows machine before releasing.
+
+## Windows 1.0 UI follow-up
+
+- The top-right Google account button now displays a multicolor Google G and opens an MH-themed account menu instead of immediately navigating to Google's sign-in page. The account menu offers sign-in, Google Account management, Gmail, YouTube, and sign-out.
+- Google can initiate a Windows Security / passkey challenge as part of its own login flow. MH Browser does not suppress WebAuthn or bypass verification; cancel and use Google's 'Try another way' option when offered. An unsigned EXE may also be labeled unverified by Windows until properly code-signed.
+- Back from Google authentication attempts to return to the initiating site (e.g., YouTube) or MH home when sign-in began from the home page.
+- Settings use expandable category cards with aligned descriptions and switches. Extensions are grouped under 'Chrome Web Store Extensions', but installing directly from the store is still not implemented.
+- The About page displays only MH Browser / Version 1.0.0, Company: MasoomDev, and Developer: MH Developers. No WhatsApp link is included.
+- Installer/uninstaller now use guided confirmation and progress pages instead of one-click removal. NSIS still uses native Windows dialog controls; complete dark styling requires a custom installer UI.
+- WhatsApp and Pinterest SVG icons use standard vector paths, and the logo is sharpened and rendered with transparency. A true high-resolution master logo is still needed for lossless HD branding.
