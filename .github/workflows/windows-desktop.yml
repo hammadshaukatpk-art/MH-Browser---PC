@@ -39,6 +39,14 @@ jobs:
           Expand-Archive ffmpeg.zip -DestinationPath ffmpeg-unpacked
           Copy-Item (Get-ChildItem ffmpeg-unpacked -Recurse -Filter ffmpeg.exe | Select-Object -First 1).FullName media-tools/ffmpeg.exe
           Copy-Item (Get-ChildItem ffmpeg-unpacked -Recurse -Filter ffprobe.exe | Select-Object -First 1).FullName media-tools/ffprobe.exe
+      - name: Validate browser JavaScript and generated branding
+        shell: pwsh
+        run: |
+          node --check main.js
+          node --check media.js
+          node --check ui/app.js
+          if (-not (Test-Path 'ui/assets/mh-logo-clean.png')) { throw 'Clean logo not generated' }
+          if (-not (Test-Path 'build/mh-browser.ico')) { throw 'Windows icon not generated' }
       - name: Build EXE setup
         run: npm run dist
       - name: Upload Windows installer
