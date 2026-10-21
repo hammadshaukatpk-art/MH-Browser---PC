@@ -68,12 +68,14 @@
 
 !ifndef BUILD_UNINSTALLER
 Function MhFinishShow
-  ; MUI2 exposes the checkbox handle. Native Windows theme rendering can
-  ; ignore SetCtlColors, so disable that theme for this checkbox only.
-  SetCtlColors $mui.FinishPage "FFFFFF" "071326"
-  SetCtlColors $mui.FinishPage.Title "FFFFFF" "071326"
-  SetCtlColors $mui.FinishPage.Text "FFFFFF" "071326"
-  SetCtlColors $mui.FinishPage.Run "FFFFFF" "071326"
-  System::Call 'UXTHEME::SetWindowTheme(p$mui.FinishPage.Run,w" ",w" ")'
+  ; The Finish page is an nsDialogs child of the installer window.
+  ; Resolve controls at runtime: electron-builder compiles its uninstaller
+  ; before the MUI2 Finish-page variables exist.
+  FindWindow $0 "#32770" "" $HWNDPARENT
+  FindWindow $1 "Button" "Run MH Browser" $0
+  StrCmp $1 0 mh_finish_done
+  SetCtlColors $1 "FFFFFF" "071326"
+  System::Call 'UXTHEME::SetWindowTheme(p$1,w" ",w" ")'
+mh_finish_done:
 FunctionEnd
 !endif
