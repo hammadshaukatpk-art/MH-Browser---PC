@@ -21,6 +21,7 @@
     },
     "files": [
       "main.js",
+      "media.js",
       "preload.js",
       "ui/**",
       "README.md",
@@ -43,6 +44,15 @@
       "createStartMenuShortcut": true,
       "shortcutName": "MH Browser",
       "artifactName": "MH-Browser-Setup-${version}.${ext}"
-    }
+    },
+    "extraResources": [
+      {
+        "from": "media-tools",
+        "to": "media-tools",
+        "filter": [
+          "*.exe"
+        ]
+      }
+    ]
   }
 }
