@@ -40,9 +40,9 @@
       "requestedExecutionLevel": "asInvoker"
     },
     "nsis": {
-      "oneClick": true,
+      "oneClick": false,
       "allowToChangeInstallationDirectory": false,
-      "createDesktopShortcut": true,
+      "createDesktopShortcut": "always",
       "createStartMenuShortcut": true,
       "shortcutName": "MH Browser",
       "artifactName": "MH-Browser-Setup-${version}.${ext}",
@@ -55,7 +55,8 @@
       "perMachine": false,
       "allowElevation": false,
       "runAfterFinish": true,
-      "deleteAppDataOnUninstall": false
+      "deleteAppDataOnUninstall": false,
+      "uninstallDisplayName": "MH Browser"
     },
     "extraResources": [
       {
