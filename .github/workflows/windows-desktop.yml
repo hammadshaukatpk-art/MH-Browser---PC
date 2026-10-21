@@ -33,6 +33,9 @@ jobs:
           python build/brand_assets.py
       - name: Install desktop dependencies
         run: npm install --no-audit --no-fund
+      - name: Smoke-test source Electron startup
+        shell: pwsh
+        run: ./tests/smoke-startup.ps1 -Source
       - name: Download FFmpeg
         shell: pwsh
         run: |
