@@ -9,7 +9,10 @@ Write-Host "Launching $exe"
 $stdout = Join-Path $env:RUNNER_TEMP 'mh-browser-stdout.txt'
 $stderr = Join-Path $env:RUNNER_TEMP 'mh-browser-stderr.txt'
 $env:ELECTRON_ENABLE_LOGGING = '1'
-$process = Start-Process -FilePath $exe -ArgumentList $launchArgs -PassThru -WorkingDirectory (if ($Source) { Join-Path $PSScriptRoot '..' } else { Split-Path $exe }) -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+$workDir = if ($Source) { Join-Path $PSScriptRoot '..' } else { Split-Path $exe }
+$params = @{FilePath=$exe;PassThru=$true;WorkingDirectory=$workDir;RedirectStandardOutput=$stdout;RedirectStandardError=$stderr}
+if ($Source) { $params.ArgumentList = '.' }
+$process = Start-Process @params
 try {
   Start-Sleep -Seconds 15
   $process.Refresh()
