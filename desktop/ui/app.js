@@ -31,7 +31,7 @@ item('◈','New private tab','Ctrl+Shift+N',action('new',true));
 section('Your browser');
 item('☆','Bookmarks','',()=>showPanel('bookmarks'));
 item('◷','History','Ctrl+H',()=>showPanel('history'));
-item('▤','Clear browsing history','Ctrl+Shift+Del',async()=>{if(await askConfirm('Clear browsing history, cookies and website data?')){await call('clear-data');hidePanel();await notice('Browsing data cleared')}});
+item('▤','Clear your browsing history','Ctrl+Shift+Del',async()=>{if(await askConfirm('Clear all saved browsing history? Website cookies and saved downloads will remain.')){await call('clear-history');hidePanel();await notice('Browsing history cleared')}});
 item('⇩','Downloads','Ctrl+J',()=>showPanel('downloads'));
 item('▣','Extensions','',()=>showPanel('extensions'));
 section('Page tools');
