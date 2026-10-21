@@ -28,6 +28,15 @@
   !insertmacro MUI_UNPAGE_WELCOME
 !macroend
 
+; A truly new installation must not inherit orphaned cookies and restored tabs
+; from an OLD uninstaller that left userData behind. Updates are never wiped.
+!macro customInstall
+  ${ifNot} ${isUpdated}
+    RMDir /r "$APPDATA\\mh-browser-windows"
+    RMDir /r "$APPDATA\\MH Browser"
+  ${endif}
+!macroend
+
 !macro customHeader
   BrandingText "MH Browser  |  MasoomDev"
 !macroend
