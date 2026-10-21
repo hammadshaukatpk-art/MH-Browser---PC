@@ -112,3 +112,12 @@ nav{gap:5px;padding-inline:12px}nav>button{flex:none}#addressForm{margin:0 3px;m
 .media-choice-label small{font-size:11px;color:var(--muted);line-height:1.35;overflow-wrap:anywhere}
 .media-choice-download{font-size:18px;color:var(--accent);text-align:right}
 .media-status,.media-loading{line-height:1.55;color:var(--muted);padding:12px 2px}
+
+/* Square/rounded-square transparent MH logo: no white framing or browser-side clipping */
+.brand .mark,.brand .mark img{border:0!important;background:transparent!important;overflow:visible!important;box-shadow:none!important}
+.brand .mark img{object-fit:contain!important;border-radius:0!important;filter:drop-shadow(0 5px 10px #0003)!important}
+.panel-head img,.dialog-brand img,.about-brand img{object-fit:contain!important;border-radius:0!important;background:transparent!important}
+.shortcut.shortcut-add{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:0;min-height:110px;width:112px;padding:13px 7px;background:var(--item);border:1px solid var(--edge);border-radius:14px;cursor:pointer}
+.shortcut-add-label{font-size:12px;font-weight:650;line-height:1.4;white-space:nowrap;color:var(--text);text-align:center}
+.shortcut-add-symbol{display:grid;place-items:center;flex:1;width:100%;min-height:56px;font-size:38px;line-height:1;font-weight:300;color:var(--accent)}
+.shortcut.shortcut-add:hover{border-color:var(--accent);background:var(--hover)}
