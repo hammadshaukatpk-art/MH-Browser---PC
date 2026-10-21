@@ -90,6 +90,11 @@ The existing Android application and source are the functional reference; do not
 - The version was raised from 1.0.0 to **1.1.0**. Previous updates accidentally reused the same installer version and could be confused with the already-installed build. Confirm the actual running build under **Menu > About MH Browser** before reporting missing features.
 - Installer Finish page: navy background, white heading/body text and a white **Run MH Browser** checkbox label, with the launch checkbox selected by default. Windows/NSIS native window chrome remains outside MH's custom theme.
 - PiP is in **Settings > Browser** (expanded by default), in the toolbar on video tabs, and as a floating **PiP** button directly on HTML5 video pages. The in-page button uses a real click/user gesture, which Chromium often requires. Embedded video frames and websites with PiP disabled may still prevent PiP.
-- Desktop/mobile site mode has a visible per-tab toolbar toggle, device emulation where supported, and per-tab persistence across restarts.
+- Desktop/mobile site mode has a visible per-tab toolbar toggle, a per-tab mobile/desktop user-agent preference and persistence across restarts. Native pre-navigation device emulation is disabled because it caused an immediate Windows startup crash; some sites still render their normal responsive layout.
 - HLS media downloads now honor the user-selected download folder. The media overlay's DOM observer is throttled to reduce slowdown on video-heavy sites.
 - These changes are source-level and installer-build verified only; browser functionality must be tested on real Windows websites. An automated build is not a guarantee that all websites or videos behave like Chrome.
+
+## Version 1.1.2 — Windows startup crash
+- A packaged Windows smoke test reproduced an immediate native process exit (code -36861) after `Applying tab site mode`. The cause was narrowed to invoking Chromium device-emulation APIs on a newly constructed WebContentsView before navigation.
+- Removed the unsafe native device-emulation calls; desktop/mobile user-agent selection remains supported and persists per tab.
+- Startup diagnostics are written to `%APPDATA%\\mh-browser-windows\\startup.log`. The build workflow now starts the packaged EXE for 15 seconds and refuses to publish an installer if the process exits early.
