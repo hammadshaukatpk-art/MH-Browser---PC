@@ -66,6 +66,7 @@
   !insertmacro MUI_PAGE_FINISH
 !macroend
 
+!ifndef BUILD_UNINSTALLER
 Function MhFinishShow
   ; MUI2 exposes the checkbox handle. Native Windows theme rendering can
   ; ignore SetCtlColors, so disable that theme for this checkbox only.
@@ -75,3 +76,4 @@ Function MhFinishShow
   SetCtlColors $mui.FinishPage.Run "FFFFFF" "071326"
   System::Call 'UXTHEME::SetWindowTheme(p$mui.FinishPage.Run,w" ",w" ")'
 FunctionEnd
+!endif
