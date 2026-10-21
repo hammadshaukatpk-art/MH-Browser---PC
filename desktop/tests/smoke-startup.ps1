@@ -1,13 +1,15 @@
+param([switch]$Source)
 # Smoke-test the *packaged* Windows executable, not just node --check.
 # A successful NSIS build alone does not prove that MH Browser can start.
 $ErrorActionPreference = 'Stop'
-$exe = Join-Path $PSScriptRoot '..\dist\win-unpacked\MH Browser.exe'
+$exe = if ($Source) { Join-Path $PSScriptRoot '..\node_modules\electron\dist\electron.exe' } else { Join-Path $PSScriptRoot '..\dist\win-unpacked\MH Browser.exe' }
+$launchArgs = if ($Source) { @('.') } else { @() }
 if (-not (Test-Path $exe)) { throw "Packaged browser missing: $exe" }
 Write-Host "Launching $exe"
 $stdout = Join-Path $env:RUNNER_TEMP 'mh-browser-stdout.txt'
 $stderr = Join-Path $env:RUNNER_TEMP 'mh-browser-stderr.txt'
 $env:ELECTRON_ENABLE_LOGGING = '1'
-$process = Start-Process -FilePath $exe -PassThru -WorkingDirectory (Split-Path $exe) -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+$process = Start-Process -FilePath $exe -ArgumentList $launchArgs -PassThru -WorkingDirectory (if ($Source) { Join-Path $PSScriptRoot '..' } else { Split-Path $exe }) -RedirectStandardOutput $stdout -RedirectStandardError $stderr
 try {
   Start-Sleep -Seconds 15
   $process.Refresh()
@@ -38,7 +40,7 @@ try {
   } else {
     Write-Warning "Expected startup log not found at $log; browser process stayed running."
   }
-  Write-Host 'MH Browser passed 15-second packaged-app startup smoke test.'
+  Write-Host ('MH Browser passed 15-second '+$(if($Source){'source Electron'}else{'packaged-app'})+' startup smoke test.')
 } finally {
   if (-not $process.HasExited) {
     & taskkill.exe /PID $process.Id /T /F | Out-Null
