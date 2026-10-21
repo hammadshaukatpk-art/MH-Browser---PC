@@ -25,7 +25,8 @@
       "preload.js",
       "ui/**",
       "README.md",
-      "package.json"
+      "package.json",
+      "site-media.js"
     ],
     "win": {
       "target": [
