@@ -60,3 +60,13 @@ The existing Android application and source are the functional reference; do not
 - The About page displays only MH Browser / Version 1.0.0, Company: MasoomDev, and Developer: MH Developers. No WhatsApp link is included.
 - Installer/uninstaller now use guided confirmation and progress pages instead of one-click removal. NSIS still uses native Windows dialog controls; complete dark styling requires a custom installer UI.
 - WhatsApp and Pinterest SVG icons use standard vector paths, and the logo is sharpened and rendered with transparency. A true high-resolution master logo is still needed for lossless HD branding.
+
+## Installer branding, profile and session lifetime
+
+- The installer and uninstaller now use the MH dark-navy Modern UI palette where NSIS permits, a branded welcome screen and a simplified current-user installation path. Native Windows installation progress controls, window chrome, and Windows trust prompts are still owned by Windows/NSIS; a completely Chrome-like custom installer would require replacing the NSIS UI architecture.
+- The source logo is rebuilt at 768px with a real alpha channel and fringe cleanup; the same clean PNG is used in the home page and the multi-resolution ICO is used for the taskbar, installer, uninstaller and shortcuts. Installer sidebar text is horizontally centered.
+- The Add Shortcut tile has its label at the top and a large centered plus symbol.
+- **Normal browser close/reopen:** persistent Chromium session retains website cookies and logins (subject to site policy). Tab restoration follows the Restore previous tabs preference.
+- **In-place installer upgrade:** saved website sessions and browser profile are preserved. Electron Builder's NSIS data deletion is explicitly skipped when the uninstall is part of an update.
+- **Full uninstall:** deletes the MH Browser application profile, including website cookies, sign-ins, history, bookmarks, saved tabs, shortcuts, and settings. This is irreversible without a backup. Downloaded files saved outside the application profile are not deleted. Reinstalling afterward opens a fresh browser profile.
+- A user who wishes to retain accounts across a reinstall should install over the existing version instead of fully uninstalling. Clearing cookies on every normal browser restart is deliberately **not** implemented.
