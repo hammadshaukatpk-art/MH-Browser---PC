@@ -1,14 +1,19 @@
 ; MH Browser / MasoomDev — NSIS Modern UI branding.
 ; Native Windows security prompts cannot be restyled or suppressed.
-!ifndef MUI_BGCOLOR
-  !define MUI_BGCOLOR "071326"
+; Override Electron Builder defaults before the MUI pages are constructed.
+; In particular the Finish page checkbox must be WHITE on the navy panel.
+!ifdef MUI_BGCOLOR
+  !undef MUI_BGCOLOR
 !endif
-!ifndef MUI_TEXTCOLOR
-  !define MUI_TEXTCOLOR "FFFFFF"
+!define MUI_BGCOLOR "071326"
+!ifdef MUI_TEXTCOLOR
+  !undef MUI_TEXTCOLOR
 !endif
-!ifndef MUI_INSTFILESPAGE_COLORS
-  !define MUI_INSTFILESPAGE_COLORS "FFFFFF 071326"
+!define MUI_TEXTCOLOR "FFFFFF"
+!ifdef MUI_INSTFILESPAGE_COLORS
+  !undef MUI_INSTFILESPAGE_COLORS
 !endif
+!define MUI_INSTFILESPAGE_COLORS "FFFFFF 071326"
 
 ; Keep installation per-user and remove the confusing install-mode radio page.
 ; Existing user sessions remain intact on ordinary in-place updates.
@@ -40,3 +45,33 @@
 !macro customHeader
   BrandingText "MH Browser  |  MasoomDev"
 !macroend
+
+; Keep the normal electron-builder launch behavior, but give the finish page
+; an explicit, high-contrast MH style rather than a dark-on-dark checkbox.
+!macro customFinishPage
+  Function MhLaunchAfterFinish
+    ${if} ${isUpdated}
+      StrCpy $1 "--updated"
+    ${else}
+      StrCpy $1 ""
+    ${endif}
+    ${StdUtils.ExecShellAsUser} $0 "$launchLink" "open" "$1"
+  FunctionEnd
+  !define MUI_FINISHPAGE_TITLE "MH Browser is ready"
+  !define MUI_FINISHPAGE_TEXT "Installation completed successfully.$\r$\n$\r$\nClick Finish to close Setup."
+  !define MUI_FINISHPAGE_RUN
+  !define MUI_FINISHPAGE_RUN_TEXT "Run MH Browser"
+  !define MUI_FINISHPAGE_RUN_FUNCTION "MhLaunchAfterFinish"
+  !define MUI_PAGE_CUSTOMFUNCTION_SHOW MhFinishShow
+  !insertmacro MUI_PAGE_FINISH
+!macroend
+
+Function MhFinishShow
+  ; MUI2 exposes the checkbox handle. Native Windows theme rendering can
+  ; ignore SetCtlColors, so disable that theme for this checkbox only.
+  SetCtlColors $mui.FinishPage "FFFFFF" "071326"
+  SetCtlColors $mui.FinishPage.Title "FFFFFF" "071326"
+  SetCtlColors $mui.FinishPage.Text "FFFFFF" "071326"
+  SetCtlColors $mui.FinishPage.Run "FFFFFF" "071326"
+  System::Call 'UXTHEME::SetWindowTheme(p$mui.FinishPage.Run,w" ",w" ")'
+FunctionEnd
