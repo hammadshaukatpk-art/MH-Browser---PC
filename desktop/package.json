@@ -57,7 +57,8 @@
       "allowElevation": false,
       "runAfterFinish": true,
       "deleteAppDataOnUninstall": true,
-      "uninstallDisplayName": "MH Browser — MasoomDev"
+      "uninstallDisplayName": "MH Browser — MasoomDev",
+      "include": "build/installer.nsh"
     },
     "extraResources": [
       {
