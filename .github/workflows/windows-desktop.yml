@@ -21,6 +21,15 @@ jobs:
           node-version: '22'
       - name: Install desktop dependencies
         run: npm install --no-audit --no-fund
+      - name: Download official yt-dlp and FFmpeg tools
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path media-tools | Out-Null
+          Invoke-WebRequest -Uri 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe' -OutFile media-tools/yt-dlp.exe
+          Invoke-WebRequest -Uri 'https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip' -OutFile ffmpeg.zip
+          Expand-Archive ffmpeg.zip -DestinationPath ffmpeg-unpacked
+          Copy-Item (Get-ChildItem ffmpeg-unpacked -Recurse -Filter ffmpeg.exe | Select-Object -First 1).FullName media-tools/ffmpeg.exe
+          Copy-Item (Get-ChildItem ffmpeg-unpacked -Recurse -Filter ffprobe.exe | Select-Object -First 1).FullName media-tools/ffprobe.exe
       - name: Build EXE setup
         run: npm run dist
       - name: Upload Windows installer
