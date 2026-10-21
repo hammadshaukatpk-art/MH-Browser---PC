@@ -4,9 +4,9 @@ This desktop app is implemented separately from the original Android Java app in
 
 ## Build the Windows installer
 
-The GitHub Actions workflow `.github/workflows/windows-desktop.yml` uses Windows, Node.js 22, Electron, NSIS, yt-dlp and FFmpeg to produce an installer artifact. It downloads official yt-dlp and a Windows FFmpeg distribution during the CI build.
+The GitHub Actions workflow `.github/workflows/windows-desktop.yml` uses Windows, Node.js 22, Electron, NSIS and FFmpeg to produce an installer artifact. It downloads a Windows FFmpeg distribution for HLS stream merging and optional MP3 conversion. There is no yt-dlp dependency.
 
-To build locally, install Node.js 22 and put Windows `yt-dlp.exe`, `ffmpeg.exe` and `ffprobe.exe` in `desktop/media-tools/` first:
+To build locally, install Node.js 22 and put Windows `ffmpeg.exe` and `ffprobe.exe` in `desktop/media-tools/` first:
 
 ```powershell
 cd desktop
@@ -25,13 +25,13 @@ The unsigned Windows installer is written to `desktop/dist/MH-Browser-Setup-1.0.
 - Direct website downloads with progress, pause, resume, cancel, open and file deletion
 - Download list and journal, per-item selection, bulk deletion, date filters and persistent completed media records
 - Floating media download action on pages with HTML5 media and supported media-page URLs
-- Windows yt-dlp public media format lookup, video resolution selection, MP3/M4A extraction and FFmpeg merging
-- Background media extraction subprocesses while the browser is running, retries and progress reporting
+- Chromium network response inspection and HTML5 media source discovery without yt-dlp, plus accessible HLS resolution selection, original file downloads, optional MP3 conversion and FFmpeg merging
+- Native Chromium website downloads, plus FFmpeg HLS/MP3 conversion while the browser is running
 - HTTP/HTTPS/SOCKS5 proxy configuration with session-only credentials, local network diagnostics and consent-based IP location lookup
 - Windows NSIS setup packaging, Start menu and desktop shortcuts
 
 ## Known gaps and testing requirements
 
-**This port is not yet verified to have exact feature parity with the Android application.** Android and Windows media engines differ. Playback, cookies, site-specific authentication, extractor restrictions, browser-specific privacy controls, detailed ad lists, every Android settings toggle, shortcut editing, complete direct-download persistence and OS-specific split-screen behavior require further parity review and real Windows testing. The yt-dlp extractor cannot guarantee all websites or protected/DRM streams. Some website login providers restrict embedded browsers. The installer is unsigned.
+**This port is not yet verified to have exact feature parity with the Android application.** Android and Windows media engines differ. Playback, cookies, site-specific authentication, extractor restrictions, browser-specific privacy controls, detailed ad lists, every Android settings toggle, shortcut editing, complete direct-download persistence and OS-specific split-screen behavior require further parity review and real Windows testing. There is no yt-dlp, extractor auto-update cycle, or fixed 90-day media component expiry. Media discovery observes actual Chromium media requests and HTML5 media sources; it does not scrape websites. DRM, encrypted/restricted streams, blob-only media without accessible source URLs, and many websites that do not expose ordinary playable media URLs are not supported. HLS/MP3 conversion jobs cannot currently pause/resume or show accurate percentage; normal Chromium file downloads can. FFmpeg still needs security and compatibility updates as part of normal application maintenance. Some website login providers restrict embedded browsers. The installer is unsigned.
 
 The existing Android application and source are the functional reference; do not delete features or merge this branch as a final parity release until each relevant behavior has been compared and validated.
