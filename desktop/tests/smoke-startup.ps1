@@ -4,11 +4,26 @@ $ErrorActionPreference = 'Stop'
 $exe = Join-Path $PSScriptRoot '..\dist\win-unpacked\MH Browser.exe'
 if (-not (Test-Path $exe)) { throw "Packaged browser missing: $exe" }
 Write-Host "Launching $exe"
-$process = Start-Process -FilePath $exe -PassThru -WorkingDirectory (Split-Path $exe)
+$stdout = Join-Path $env:RUNNER_TEMP 'mh-browser-stdout.txt'
+$stderr = Join-Path $env:RUNNER_TEMP 'mh-browser-stderr.txt'
+$env:ELECTRON_ENABLE_LOGGING = '1'
+$process = Start-Process -FilePath $exe -PassThru -WorkingDirectory (Split-Path $exe) -RedirectStandardOutput $stdout -RedirectStandardError $stderr
 try {
   Start-Sleep -Seconds 15
   $process.Refresh()
-  if ($process.HasExited) { throw "MH Browser exited during startup (exit code $($process.ExitCode))." }
+  if ($process.HasExited) {
+    Write-Host '--- Browser stdout ---'
+    if (Test-Path $stdout) { Get-Content $stdout -Tail 70 }
+    Write-Host '--- Browser stderr ---'
+    if (Test-Path $stderr) { Get-Content $stderr -Tail 100 }
+    Write-Host '--- Browser profile diagnostics ---'
+    Get-ChildItem (Join-Path $env:APPDATA 'mh-browser-windows') -ErrorAction SilentlyContinue | Select-Object Name,Length | Format-Table
+    $log = Join-Path $env:APPDATA 'mh-browser-windows\startup.log'
+    if (Test-Path $log) { Get-Content $log -Tail 70 }
+    Write-Host '--- Recent Windows application errors ---'
+    Get-WinEvent -FilterHashtable @{LogName='Application';Level=2;StartTime=(Get-Date).AddMinutes(-3)} -MaxEvents 5 -ErrorAction SilentlyContinue | ForEach-Object { Write-Host $_.Message }
+    throw "MH Browser exited during startup (exit code $($process.ExitCode))."
+  }
   $log = Join-Path $env:APPDATA 'mh-browser-windows\startup.log'
   if (Test-Path $log) {
     Write-Host '--- MH Browser startup log ---'
