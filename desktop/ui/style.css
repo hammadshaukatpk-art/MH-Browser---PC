@@ -99,3 +99,16 @@ nav{gap:5px;padding-inline:12px}nav>button{flex:none}#addressForm{margin:0 3px;m
 #shortcuts .shortcut img{width:38px;height:38px;object-fit:contain;flex:none}
 #homepage .brand .mark{width:96px;height:96px}
 #homepage .brand .mark img{width:96px;height:96px;object-fit:contain;border-radius:22px;filter:drop-shadow(0 5px 10px #0004)}
+
+/* Media choices: clear title and video-first / audio-second presentation */
+.media-heading{padding:8px 2px 13px;border-bottom:1px solid var(--edge);overflow-wrap:anywhere}
+.media-heading strong{font-size:14px;line-height:1.5;color:var(--text)}
+.media-section-title{margin:18px 3px 9px;font-size:11px;font-weight:750;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.media-choice{width:100%;min-height:66px;display:grid;grid-template-columns:34px minmax(0,1fr) 22px;gap:10px;align-items:center;text-align:left;padding:10px 12px;margin:7px 0;background:var(--item);border:1px solid var(--edge);border-radius:11px}
+.media-choice:hover{border-color:var(--accent);background:var(--hover)}
+.media-choice-icon{width:32px;height:32px;border-radius:10px;background:#1979e425;display:grid;place-items:center;color:var(--accent);font-size:17px}
+.media-choice-label{display:flex;flex-direction:column;gap:5px;min-width:0}
+.media-choice-label strong{font-size:13px;font-weight:650;line-height:1.3}
+.media-choice-label small{font-size:11px;color:var(--muted);line-height:1.35;overflow-wrap:anywhere}
+.media-choice-download{font-size:18px;color:var(--accent);text-align:right}
+.media-status,.media-loading{line-height:1.55;color:var(--muted);padding:12px 2px}
