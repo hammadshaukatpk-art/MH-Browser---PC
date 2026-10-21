@@ -64,3 +64,13 @@ No browser engine can guarantee zero security risk. Release requirements: curren
 - Back navigation from Google authentication prioritizes the initiating website, or MH home for direct home-page sign-in.
 - Settings use accessible expandable category groups, and About identifies MasoomDev and MH Developers.
 - NSIS guided uninstallation shows confirmation/progress; complete native dark wizard styling and signed publisher identity remain outstanding.
+
+## October 21 follow-up: media, advertising, and supplied branding
+
+- The user-provided transparent MH logo replaces the earlier blurry WebP source. The Windows packaging workflow regenerates the home-page, application and installer icon from this image, preserving alpha transparency.
+- Clear your browsing history is under Your browser, immediately below History. It removes browsing-history records only; it does not silently clear cookies or delete files.
+- The media panel lists video first, audio second, and uses the active page title instead of exposing raw HLS playlist filenames. HLS quality choices may appear when a master playlist is accessible.
+- A pinned official yt-dlp executable is downloaded during Windows CI and its SHA256 checked against the upstream checksum file. Public YouTube, Facebook, Instagram, TikTok and Pinterest pages can be probed for media. This does not bypass login, copyright restrictions or DRM; results depend on the website, the extractor version and media accessibility. Download failures must remain visible.
+- Blocking now includes more advertising/tracking hosts and denies unsolicited cross-site popup windows when ad blocking is enabled. This is best-effort protection, not a guarantee that every advertisement is blocked.
+- Installer and uninstaller remain NSIS native wizard pages with MH-branded artwork. A Chrome/Opera-style fully dark custom installer is **not complete**. Building and signing a dedicated custom installer frontend is separate work; do not mark it done without Windows testing.
+- Chrome Sync, full Chrome Web Store integration and all-site download support remain unimplemented.
