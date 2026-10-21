@@ -39,8 +39,8 @@
       "icon": "build/mh-browser.ico"
     },
     "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
+      "oneClick": true,
+      "allowToChangeInstallationDirectory": false,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "MH Browser",
@@ -50,7 +50,11 @@
       "installerHeaderIcon": "build/mh-browser.ico",
       "installerSidebar": "build/installer-sidebar.bmp",
       "uninstallerSidebar": "build/installer-sidebar.bmp",
-      "installerHeader": "build/installer-header.bmp"
+      "installerHeader": "build/installer-header.bmp",
+      "perMachine": false,
+      "allowElevation": false,
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false
     },
     "extraResources": [
       {
