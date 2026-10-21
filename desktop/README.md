@@ -14,7 +14,7 @@ npm install
 npm run dist
 ```
 
-The unsigned Windows installer is written to `desktop/dist/MH-Browser-Setup-1.0.0.exe` when packaging succeeds.
+The unsigned Windows installer is written to `desktop/dist/MH-Browser-Setup-1.1.0.exe` when packaging succeeds.
 
 ## Implemented desktop capabilities
 
@@ -57,7 +57,7 @@ The existing Android application and source are the functional reference; do not
 - Google can initiate a Windows Security / passkey challenge as part of its own login flow. MH Browser does not suppress WebAuthn or bypass verification; cancel and use Google's 'Try another way' option when offered. An unsigned EXE may also be labeled unverified by Windows until properly code-signed.
 - Back from Google authentication attempts to return to the initiating site (e.g., YouTube) or MH home when sign-in began from the home page.
 - Settings use expandable category cards with aligned descriptions and switches. Extensions are grouped under 'Chrome Web Store Extensions', but installing directly from the store is still not implemented.
-- The About page displays only MH Browser / Version 1.0.0, Company: MasoomDev, and Developer: MH Developers. No WhatsApp link is included.
+- The About page displays MH Browser's installed version dynamically, Company: MasoomDev, and Developer: MH Developers. No WhatsApp link is included.
 - Installer/uninstaller now use guided confirmation and progress pages instead of one-click removal. NSIS still uses native Windows dialog controls; complete dark styling requires a custom installer UI.
 - WhatsApp and Pinterest SVG icons use standard vector paths, and the logo is sharpened and rendered with transparency. A true high-resolution master logo is still needed for lossless HD branding.
 
