@@ -34,6 +34,7 @@ section('Zoom and display');
 const zoom=el('div','zoom-control'),minus=button('−',async()=>{await call('zoom',-.1);updateZoom()},'secondary'),value=el('strong',null,'100%'),plus=button('+',async()=>{await call('zoom',.1);updateZoom()},'secondary'),full=button('⛶',action('fullscreen'),'secondary');
 const updateZoom=async()=>{try{value.textContent=Math.round(await call('zoom-level')*100)+'%'}catch{}};zoom.append(el('span',null,'Zoom'),minus,value,plus,full);host.append(zoom);updateZoom();
 section('Privacy and settings');
+item(settings.theme==='dark'?'☼':'☾',settings.theme==='dark'?'Switch to light theme':'Switch to dark theme','',async()=>{settings=await call('settings',{theme:settings.theme==='dark'?'light':'dark'});applyTheme();renderPanel()});
 item('▤','Clear browsing data','Ctrl+Shift+Del',()=>{if(confirm('Delete normal browsing history and website data?'))action('clear-data')()});
 item('⚙','Settings','',()=>showPanel('settings'));
 item('ⓘ','About MH Browser','',()=>showPanel('about'));
