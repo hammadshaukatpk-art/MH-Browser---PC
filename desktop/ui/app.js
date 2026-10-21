@@ -31,6 +31,7 @@ item('◈','New private tab','Ctrl+Shift+N',action('new',true));
 section('Your browser');
 item('☆','Bookmarks','',()=>showPanel('bookmarks'));
 item('◷','History','Ctrl+H',()=>showPanel('history'));
+item('▤','Clear browsing history','Ctrl+Shift+Del',async()=>{if(await askConfirm('Clear browsing history, cookies and website data?')){await call('clear-data');hidePanel();await notice('Browsing data cleared')}});
 item('⇩','Downloads','Ctrl+J',()=>showPanel('downloads'));
 item('▣','Extensions','',()=>showPanel('extensions'));
 section('Page tools');
@@ -45,7 +46,6 @@ const zoom=el('div','zoom-control'),minus=button('−',async()=>{await call('zoo
 const updateZoom=async()=>{try{value.textContent=Math.round(await call('zoom-level')*100)+'%'}catch{}};zoom.append(el('span',null,'Zoom'),minus,value,plus,full);host.append(zoom);updateZoom();
 section('Privacy and settings');
 item(settings.theme==='dark'?'☼':'☾',settings.theme==='dark'?'Switch to light theme':'Switch to dark theme','',async()=>{settings=await call('settings',{theme:settings.theme==='dark'?'light':'dark'});applyTheme();renderPanel()});
-item('▤','Clear browsing data','Ctrl+Shift+Del',async()=>{if(await askConfirm('Delete normal browsing history and website data?'))await action('clear-data')()});
 item('⚙','Settings','',()=>showPanel('settings'));
 item('ⓘ','About MH Browser','',()=>showPanel('about'));
 return}
@@ -86,7 +86,14 @@ if(panel==='proxy'){
  form.append(button('Apply proxy settings',async()=>{try{const p={active:enabled.checked,scheme:fields.scheme.value,host:fields.host.value.trim(),port:fields.port.value.trim(),user:fields.user.value,password:fields.password.value};settings.proxy=await call('proxy',p);await notice('Proxy settings saved.');showPanel('settings')}catch(e){notice(e.message)}},'action'));
  form.onsubmit=e=>e.preventDefault();host.append(form);return}
 if(panel==='network'){host.append(el('p',null,'Checking network interfaces…'));call('network').then(data=>{if(panel!=='network')return;host.replaceChildren();entry(host,'System',data.platform+' '+data.release+' • '+data.timezone+' • '+data.locale);for(const row of data.interfaces)entry(host,row.name,row.address);host.append(button('Look up public IP and approximate region',async()=>{if(!await askConfirm('This sends your public IP to ipwho.is. Continue?'))return;try{const result=await call('public-ip');entry(host,result.ip,[result.city,result.region,result.country].filter(Boolean).join(', '))}catch(e){notice(e.message)}},'secondary'))});return}
-if(panel==='media'){if(!mediaResult){host.append(el('p',null,'Checking available media formats…'));return}if(mediaResult.error){host.append(el('p',null,'Format lookup unavailable: '+mediaResult.error));return}host.append(el('strong',null,mediaResult.title));if(mediaResult.explanation)host.append(el('p',null,mediaResult.explanation));for(const choice of mediaResult.choices){host.append(button(choice.label,async()=>{try{await call('media-start',{url:mediaUrl,choice});showPanel('downloads')}catch(e){notice('Cannot start download: '+e.message)}},'field'))}return}
+if(panel==='media'){
+ if(!mediaResult){host.append(el('p','media-loading','Checking available media formats…'));return}
+ if(mediaResult.error){host.append(el('p','media-status','Media detection unavailable: '+mediaResult.error));return}
+ const header=el('div','media-heading');header.append(el('strong',null,mediaResult.title||'Detected media'));host.append(header);
+ if(!mediaResult.choices?.length){host.append(el('p','media-status','No downloadable media found. Start playback, then reopen Media. Some websites require sign-in or protect their streams.'));return}
+ const videos=mediaResult.choices.filter(c=>c.type!=='audio'),audios=mediaResult.choices.filter(c=>c.type==='audio');
+ for(const [heading,rows] of [['Video downloads',videos],['Audio downloads',audios]]){if(!rows.length)continue;host.append(el('div','media-section-title',heading));for(const choice of rows){const row=el('button','media-choice');const label=el('span','media-choice-label');label.append(el('strong',null,choice.label),el('small',null,choice.description||''));row.append(el('span','media-choice-icon',choice.type==='audio'?'♫':'▶'),label,el('span','media-choice-download','↓'));row.onclick=async()=>{try{await call('media-start',{url:mediaUrl,choice});showPanel('downloads')}catch(e){notice('Cannot start download: '+e.message)}};host.append(row)}}
+ return}
 if(panel==='settings'){
  const category=(name,subtitle)=>{const details=el('details','settings-category');const summary=el('summary','settings-category-head');const words=el('span','setting-words');words.append(el('strong',null,name),el('small',null,subtitle));summary.append(words,el('span','settings-chevron','⌄'));details.append(summary);const body=el('div','settings-category-body');details.append(body);host.append(details);return body};
  const toggle=(target,key,title,description)=>{const row=el('label','setting-toggle'),words=el('span','setting-words');words.append(el('strong',null,title),el('small',null,description));const check=el('input');check.type='checkbox';check.checked=!!settings[key];check.onchange=async()=>{try{settings=await call('settings',{[key]:check.checked});if(['javascript','desktopDefault'].includes(key))await notice('This change applies to newly opened tabs.')}catch(e){check.checked=!check.checked;await notice(e.message)}};row.append(words,check);target.append(row)};
