@@ -47,7 +47,10 @@
       "artifactName": "MH-Browser-Setup-${version}.${ext}",
       "installerIcon": "build/mh-browser.ico",
       "uninstallerIcon": "build/mh-browser.ico",
-      "installerHeaderIcon": "build/mh-browser.ico"
+      "installerHeaderIcon": "build/mh-browser.ico",
+      "installerSidebar": "build/installer-sidebar.bmp",
+      "uninstallerSidebar": "build/installer-sidebar.bmp",
+      "installerHeader": "build/installer-header.bmp"
     },
     "extraResources": [
       {
