@@ -1,5 +1,5 @@
 'use strict';
-const $=id=>document.getElementById(id);let snapshot={tabs:[],active:null},panel=null,filter='All',downloads=[],bookmarks=[],history=[],shortcuts=[],settings={},selectedDownloads=new Set(),mediaResult=null,mediaUrl='';
+const $=id=>document.getElementById(id);document.querySelectorAll('img[src="assets/mh-logo-clean.png"]').forEach(img=>img.addEventListener('error',()=>{img.src='assets/mh-logo.webp'},{once:true}));let snapshot={tabs:[],active:null},panel=null,filter='All',downloads=[],bookmarks=[],history=[],shortcuts=[],settings={},selectedDownloads=new Set(),mediaResult=null,mediaUrl='';
 const call=(action,data)=>window.mh.call(action,data);
 function themedDialog(kind,message,initial=''){return new Promise(resolve=>{
  const backdrop=$('dialogBackdrop'),title=$('dialogTitle'),body=$('dialogMessage'),input=$('dialogInput'),ok=$('dialogOK'),cancel=$('dialogCancel');
