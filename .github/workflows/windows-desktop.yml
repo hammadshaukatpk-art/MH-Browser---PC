@@ -27,8 +27,7 @@ jobs:
         run: |
           python -m pip install --disable-pip-version-check Pillow
           New-Item -ItemType Directory -Force -Path build | Out-Null
-          python -c "from PIL import Image,ImageDraw,ImageFilter,ImageChops; im=Image.open('ui/assets/mh-logo.webp').convert('RGBA'); mask=Image.new('L',im.size,0); ImageDraw.Draw(mask).rounded_rectangle((2,2,im.width-3,im.height-3),radius=int(im.width*.20),fill=255); im.putalpha(ImageChops.multiply(im.getchannel('A'),mask.filter(ImageFilter.GaussianBlur(.5)))); im=im.resize((512,512),Image.Resampling.LANCZOS).filter(ImageFilter.UnsharpMask(radius=1.0,percent=110,threshold=3)); im.save('ui/assets/mh-logo-clean.png'); im=im.resize((256,256),Image.Resampling.LANCZOS); im.save('build/mh-browser.ico',format='ICO',sizes=[(16,16),(24,24),(32,32),(48,48),(64,64),(128,128),(256,256)])"
-          python -c "from PIL import Image,ImageDraw; src=Image.open('ui/assets/mh-logo-clean.png').convert('RGBA'); canvas=Image.new('RGB',(164,314),'#071326'); logo=src.resize((144,144),Image.Resampling.LANCZOS); canvas.paste(logo,(10,48),logo.getchannel('A')); ImageDraw.Draw(canvas).text((32,206),'MH BROWSER',fill='#ffffff'); canvas.save('build/installer-sidebar.bmp'); header=Image.new('RGB',(150,57),'#10223a'); small=src.resize((49,49),Image.Resampling.LANCZOS); header.paste(small,(4,4),small.getchannel('A')); ImageDraw.Draw(header).text((57,21),'MH Browser',fill='#ffffff'); header.save('build/installer-header.bmp')"
+          python build/brand_assets.py
       - name: Install desktop dependencies
         run: npm install --no-audit --no-fund
       - name: Download FFmpeg
@@ -60,6 +59,7 @@ jobs:
           node --check ui/app.js
           if (-not (Test-Path 'ui/assets/mh-logo-clean.png')) { throw 'Missing MH logo' }
           if (-not (Test-Path 'build/mh-browser.ico')) { throw 'Missing Windows icon' }
+          python -c "from PIL import Image; im=Image.open('ui/assets/mh-logo-clean.png').convert('RGBA'); assert im.size==(768,768); assert im.getpixel((0,0))[3]==0; assert im.getpixel((384,384))[3]==255; print('Logo transparency and HD size verified')"
       - name: Build EXE installer
         run: npm run dist
       - name: Upload Windows installer
