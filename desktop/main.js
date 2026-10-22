@@ -63,7 +63,7 @@ function createTab(url=HOME,priv=false,activate=true,desktopOverride=null){diagn
  if(!allowSitePopup(wc.getURL(),url,details)){send('popup-blocked',{site:wc.getURL()});return{action:'deny'}}
  // Ordinary website target=_blank links open in the current tab so Back
  // returns to the originating page. Explicit middle/Ctrl-click opens a tab.
- const separate=disposition==='background-tab'||disposition==='foreground-tab'||disposition==='new-window'&&/accounts\\.google\\.com|login\\.microsoftonline\\.com|appleid\\.apple\\.com/i.test(url);
+ const separate=disposition==='background-tab'||(/accounts\\.google\\.com|login\\.microsoftonline\\.com|appleid\\.apple\\.com/i.test(url)&&disposition==='new-window');
  if(separate)createTab(url,priv,disposition!=='background-tab');
  else navigate(t,url);
  return{action:'deny'}
