@@ -162,3 +162,10 @@ body.light #pipButton{color:#16365b;background:#e3f0ff;border-color:#237dd1}
 #siteMode{flex:0 0 auto;min-width:55px!important;height:34px!important;padding:0 8px;border:1px solid var(--edge);background:var(--surface);color:var(--text);font-size:11px!important;font-weight:650;white-space:nowrap}
 #siteMode:hover{border-color:var(--accent);background:var(--hover)}
 @media(max-width:1000px){#siteMode{min-width:30px!important;padding:0 5px;font-size:10px!important}#pipButton{min-width:44px!important;padding:0 5px}}
+
+/* Native MH Browser install control for Chrome Web Store extension detail pages. */
+#storeInstall{flex:0 0 auto;min-width:95px!important;height:34px!important;padding:0 9px;border:1px solid #45c2f5;border-radius:10px;background:#113d5e;color:#fff;font-size:12px!important;font-weight:700;white-space:nowrap}
+#storeInstall:hover{background:#17648c;border-color:#83dcff}
+#storeInstall:disabled{opacity:.65;cursor:wait}
+body.light #storeInstall{background:#dff1ff;color:#123b5a;border-color:#1e80ba}
+@media(max-width:1050px){#storeInstall{min-width:70px!important;padding:0 5px;font-size:10px!important}}
