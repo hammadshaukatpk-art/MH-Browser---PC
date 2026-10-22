@@ -90,6 +90,13 @@ mainWindow.loadFile(path.join(__dirname,'ui','index.html')).catch(e=>diagnostic(
       else createTab();
     }else {diagnostic('Creating first home tab');createTab()}
     layout();diagnostic('Browser initialized with '+tabs.size+' tab(s)');
+    if(process.argv.includes('--mh-smoke-navigation')){
+      setTimeout(()=>{
+        require('./navigation-smoke').run({tab:current(),navigate,canBack,goBack,tabs})
+          .then(()=>{diagnostic('Navigation smoke passed');app.exit(0)})
+          .catch(error=>{diagnostic('Navigation smoke failed',error);app.exit(3)});
+      },700);
+    }
   }catch(e){
     diagnostic('Startup tab initialization failed',e);
     try{if(!tabs.size)createTab(HOME,false,true);layout()}catch(fatal){diagnostic('Fallback home tab failed',fatal);dialog.showErrorBox('MH Browser startup error','Please send startup.log from your MH Browser profile.\n'+String(fatal.message||fatal))}
