@@ -1,7 +1,7 @@
 'use strict';
 const {app,BrowserWindow,WebContentsView,ipcMain,session,dialog,shell,Menu,clipboard,nativeTheme}=require('electron');
 const fs=require('fs'),path=require('path'),os=require('os');
-const media=require('./media');const siteMedia=require('./site-media');const pip=require('./pip');let mediaTasks=new Map(),mediaRecords=new Map(),panelOpen=false,dialogOpen=false;
+const media=require('./media');const siteMedia=require('./site-media');const pip=require('./pip');const chromeStore=require('./chrome-store');let mediaTasks=new Map(),mediaRecords=new Map(),panelOpen=false,dialogOpen=false;
 const HOME='mh://home',STATE_FILE='state.json',TOOLBAR_HEIGHT=96,PANEL_WIDTH=390;
 const LOG_FILE='startup.log';
 function diagnostic(message,error){
@@ -53,7 +53,7 @@ function canBack(wc){try{return !!navHistory(wc).canGoBack()}catch{return false}
 function canForward(wc){try{return !!navHistory(wc).canGoForward()}catch{return false}}
 function goBack(wc){if(canBack(wc)){navHistory(wc).goBack();return true}return false}
 function goForward(wc){if(canForward(wc)){navHistory(wc).goForward();return true}return false}
-function metadata(t){const wc=t.view.webContents;return{id:t.id,title:t.title||'New Tab',url:t.url,private:t.private,desktop:!!t.desktop,media:!!t.media,loading:t.loading,back:!!t.homeReturn||canBack(wc),forward:canForward(wc),favorite:state.bookmarks.some(b=>b.url===t.url)}}
+function metadata(t){const wc=t.view.webContents;return{id:t.id,title:t.title||'New Tab',url:t.url,private:t.private,desktop:!!t.desktop,media:!!t.media,loading:t.loading,back:!!t.homeReturn||canBack(wc),forward:canForward(wc),storeExtensionId:chromeStore.extensionIdFromURL(t.url),favorite:state.bookmarks.some(b=>b.url===t.url)}}
 function emit(){send('tabs',{tabs:[...tabs.values()].map(metadata),active:activeId});save()}
 function layout(){if(!mainWindow)return;const [w,h]=mainWindow.getContentSize();for(const t of tabs.values()){const selected=t.id===activeId&&t.url!==HOME&&!dialogOpen;t.view.setBounds(selected?{x:0,y:TOOLBAR_HEIGHT,width:Math.max(w-(panelOpen?PANEL_WIDTH:0),1),height:Math.max(h-TOOLBAR_HEIGHT,1)}:{x:-30000,y:-30000,width:1,height:1})}send('viewport',{width:w,height:h})}
 function hideOrShow(t){if(t.url===HOME){send('home',{active:true})}else{send('home',{active:false})}layout()}
@@ -179,6 +179,32 @@ case 'fullscreen':mainWindow.setFullScreen(!mainWindow.isFullScreen());return ma
 case 'print':{if(!t||t.url===HOME)throw new Error('Open a page to print');if(panelOpen){panelOpen=false;send('panel-close',true);layout()}return await new Promise((resolve,reject)=>t.view.webContents.print({silent:false,printBackground:true},(success,reason)=>success?resolve(true):reject(new Error(reason||'Print cancelled'))))}
 case 'save-page':{if(!t||t.url===HOME)throw new Error('Open a website before saving');const safe=String(t.title||'webpage').replace(/[<>:"/\\|?*\\x00-\\x1f]/g,'_').slice(0,110)||'webpage';const output=path.join(pageDir(),safe+'-'+Date.now()+'.html');try{await t.view.webContents.savePage(output,'HTMLComplete')}catch(e){try{await t.view.webContents.savePage(output,'HTMLOnly')}catch{throw new Error('This website cannot be saved: '+e.message)}}const row={id:'page-'+Date.now(),title:t.title,url:t.url,path:output,at:Date.now()};state.savedPages=[row,...(state.savedPages||[])].slice(0,1000);save();return row}
 case 'translate':if(t&&t.url!==HOME){if(!/^https?:\/\//i.test(t.url))throw new Error('Only public websites can be translated');navigate(t,'https://translate.google.com/translate?sl=auto&tl=en&u='+encodeURIComponent(t.url))}return true;
+case 'install-webstore':{
+ if(!t||t.private)throw new Error('Open the extension in a normal browsing tab');
+ const storeId=chromeStore.extensionIdFromURL(t.url);
+ if(!storeId)throw new Error('Open a Chrome Web Store extension detail page first');
+ const ses=session.fromPartition('persist:mh-regular');
+ if(ses.getAllExtensions().some(x=>x.id===storeId))throw new Error('This extension is already installed');
+ const approved=await dialog.showMessageBox(mainWindow,{type:'question',buttons:['Cancel','Continue'],defaultId:0,cancelId:0,title:'MH Browser — Chrome extension',message:'Download this extension into MH Browser?',detail:'The extension will be fetched from the Chrome Web Store and installed locally. Not every Chrome extension API is supported by Electron. Install only extensions you trust.'});
+ if(approved.response!==1)return{cancelled:true};
+ let prepared;
+ try{
+  prepared=await chromeStore.prepareExtension({id:storeId,userData:app.getPath('userData'),chromeVersion:process.versions.chrome});
+  const manifest=prepared.manifest;
+  const permissions=[...(manifest.permissions||[]),...(manifest.host_permissions||[])].slice(0,18);
+  const result=await dialog.showMessageBox(mainWindow,{type:'warning',buttons:['Cancel','Install'],defaultId:0,cancelId:0,title:'Confirm extension permissions',message:'Install '+manifest.name+'?',detail:'Version: '+(manifest.version||'Unknown')+'\\nPermissions: '+(permissions.length?permissions.join(', '):'No declared permissions')+'\\n\\nSome Chrome-specific features may not work in MH Browser.'});
+  if(result.response!==1)return{cancelled:true};
+  fs.renameSync(prepared.temp,prepared.dest);
+  prepared.temp=null;
+  let ext;
+  try{ext=await ses.loadExtension(prepared.dest,{allowFileAccess:false})}
+  catch(e){fs.rmSync(prepared.dest,{recursive:true,force:true});throw new Error('Extension is not compatible with MH Browser: '+e.message)}
+  if(!Array.isArray(state.extensions))state.extensions=[];
+  if(!state.extensions.includes(prepared.dest))state.extensions.push(prepared.dest);
+  save();send('extensions',extensionList());
+  return{id:ext.id,name:ext.name,version:ext.version}
+ }finally{if(prepared?.temp)fs.rmSync(prepared.temp,{recursive:true,force:true})}
+}
 case 'extensions':return extensionList();
 case 'extension-popup':{const ext=session.fromPartition('persist:mh-regular').getAllExtensions().find(e=>e.id===String(data));if(!ext)throw new Error('Extension not installed');const page=ext.manifest?.action?.default_popup||ext.manifest?.browser_action?.default_popup;if(!page)throw new Error('This extension has no toolbar popup');const clean=String(page).replace(/^\/+/, '');if(clean.includes('..')||clean.includes('\\\\'))throw new Error('Invalid extension popup path');const popup=new BrowserWindow({parent:mainWindow,modal:false,width:380,height:520,show:false,frame:true,title:ext.name,backgroundColor:'#10223a',webPreferences:{session:session.fromPartition('persist:mh-regular'),nodeIntegration:false,contextIsolation:true,sandbox:true}});popup.setMenuBarVisibility(false);popup.loadURL('chrome-extension://'+ext.id+'/'+clean).then(()=>popup.show()).catch(e=>{popup.destroy();send('extension-error',e.message)});popup.on('blur',()=>{if(!popup.isDestroyed())popup.close()});return true}
 case 'load-extension':{const d=await dialog.showOpenDialog(mainWindow,{title:'Choose unpacked Chromium extension folder',properties:['openDirectory']});if(d.canceled||!d.filePaths.length)return false;const folder=d.filePaths[0];if(!fs.existsSync(path.join(folder,'manifest.json')))throw new Error('Selected folder has no manifest.json');const ext=await session.fromPartition('persist:mh-regular').loadExtension(folder,{allowFileAccess:false});if(!Array.isArray(state.extensions))state.extensions=[];if(!state.extensions.includes(folder))state.extensions.push(folder);save();send('extensions',extensionList());return{name:ext.name,id:ext.id}}
