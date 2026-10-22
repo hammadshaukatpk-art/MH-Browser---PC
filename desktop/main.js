@@ -31,11 +31,10 @@ function isAdDestination(raw){try{const u=new URL(raw);if(!/^https?:$/.test(u.pr
 function blocked(details){if(settings.images===false&&details.resourceType==='image')return{cancel:true};if(!settings.adblock&&!settings.trackers)return{};try{const u=new URL(details.url),host=u.hostname.toLowerCase();if(/^(localhost|127\.0\.0\.1)$/.test(host))return{};if(settings.adblock&&(adHostPatterns.some(d=>matchHost(host,d))||[...filters].some(d=>matchHost(host,d))))return{cancel:true};if(settings.trackers&&['google-analytics.com','hotjar.com','clarity.ms','scorecardresearch.com','mixpanel.com'].some(d=>matchHost(host,d)))return{cancel:true}}catch{}return{}}
 function allowSitePopup(source,target,details={}){try{
  const dest=new URL(target);if(!/^https?:$/.test(dest.protocol)||isAdDestination(target))return false;
- // A deliberate user click may open any legitimate HTTPS/HTTP destination.
- // Block unsolicited advertising windows, not ordinary cross-site links.
- if(details.userGesture===true)return true;
- const from=new URL(source);const ah=from.hostname.replace(/^www\\./,''),bh=dest.hostname.replace(/^www\\./,'');
- return ah===bh||ah.endsWith('.'+bh)||bh.endsWith('.'+ah)||['accounts.google.com','login.microsoftonline.com','appleid.apple.com'].includes(bh)
+ // Electron does not consistently expose userGesture for target=_blank.
+ // Do not discard normal cross-domain hyperlinks just because adblock is on.
+ // Known advertising destinations remain blocked by isAdDestination above.
+ return true
 }catch{return false}}
 async function initFilters(){const defaults=['doubleclick.net','googlesyndication.com','googleadservices.com','adnxs.com','taboola.com','outbrain.com','pubmatic.com','popads.net','criteo.com','adsrvr.org','adsterra.com','exoclick.com'];defaults.forEach(d=>filters.add(d));}
 async function applyProxy(s){const p=settings.proxy||{};if(!p.active){await s.setProxy({mode:'direct'});return}if(!/^(http|https|socks5)$/.test(p.scheme)||!p.host||!Number.isInteger(Number(p.port))||Number(p.port)<1||Number(p.port)>65535)throw new Error('Invalid proxy configuration');await s.setProxy({proxyRules:p.scheme+'://'+p.host+':'+p.port})}
