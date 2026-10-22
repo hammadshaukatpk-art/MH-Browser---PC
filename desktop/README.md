@@ -14,7 +14,7 @@ npm install
 npm run dist
 ```
 
-The unsigned Windows installer is written to `desktop/dist/MH-Browser-Setup-1.1.0.exe` when packaging succeeds.
+The unsigned Windows installer is written to `desktop/dist/MH-Browser-Setup-1.1.3.exe` when packaging succeeds.
 
 ## Implemented desktop capabilities
 
@@ -98,3 +98,10 @@ The existing Android application and source are the functional reference; do not
 - A packaged Windows smoke test reproduced an immediate native process exit (code -36861) after `Applying tab site mode`. The cause was narrowed to invoking Chromium device-emulation APIs on a newly constructed WebContentsView before navigation.
 - Removed the unsafe native device-emulation calls; desktop/mobile user-agent selection remains supported and persists per tab.
 - Startup diagnostics are written to `%APPDATA%\\mh-browser-windows\\startup.log`. The build workflow now starts the packaged EXE for 15 seconds and refuses to publish an installer if the process exits early.
+
+## Version 1.1.3 — Chrome Web Store import and navigation fixes
+
+- **Chrome Web Store:** Browse `https://chromewebstore.google.com/` directly inside MH Browser. On an extension detail page, select **+ Extension** in the browser toolbar (or **Extensions > Install current store extension**). The browser downloads the CRX package from Google's update service, validates and extracts it, shows the manifest permissions for confirmation, and loads it using Electron's built-in `session.loadExtension`. Google Chrome itself and Google account login are not prerequisites for this MH Browser import route.
+- **Compatibility limits:** Chrome Web Store's own **Add to Chrome / Install Chrome** button is not connected to Electron. Electron implements only a subset of Chrome extension APIs, so some store extensions cannot be installed or may install but not function completely. The CRX service can reject certain packages. Extension updates are not automatic; manually remove and reinstall to update. Only install extensions you trust.
+- **Links and Back:** Ordinary cross-site website links are no longer discarded by popup filtering. Normal target-blank links navigate in the current tab to keep Back usable, while explicitly requested background/foreground tabs can open separately. Navigation uses Electron's current `navigationHistory` API with fallback for older versions.
+- **Release checks:** CI verifies Chrome Web Store ID parsing, CRX3 unpacking, packaged-app startup, and real link-click / Back behavior across two local website origins before uploading an installer.
