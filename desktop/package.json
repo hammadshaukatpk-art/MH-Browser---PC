@@ -28,7 +28,8 @@
       "package.json",
       "site-media.js",
       "pip.js",
-      "chrome-store.js"
+      "chrome-store.js",
+      "navigation-smoke.js"
     ],
     "win": {
       "target": [
