@@ -77,4 +77,4 @@ async function prepareExtension({id,userData,chromeVersion}){
  fs.mkdirSync(temp,{recursive:true});
  try{const manifest=unpack(extractZipBytes(buffer),temp);return{temp,dest,manifest}}catch(e){fs.rmSync(temp,{recursive:true,force:true});throw e}
 }
-module.exports={extensionIdFromURL,prepareExtension};
+module.exports={extensionIdFromURL,prepareExtension,_extractZipBytes:extractZipBytes,_unpack:unpack};
