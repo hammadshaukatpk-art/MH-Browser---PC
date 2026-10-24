@@ -14,7 +14,15 @@ npm install
 npm run dist
 ```
 
-The unsigned Windows installer is written to `desktop/dist/MH-Browser-Setup-1.1.3.exe` when packaging succeeds.
+The unsigned Windows installer is written to `desktop/dist/MH-Browser-Setup-1.1.4.exe` when packaging succeeds.
+
+## Chrome Web Store integration (v1.1.4)
+
+On a Chrome Web Store extension detail page, MH Browser provides its own **Install in MH Browser** control, as well as **+ Extension** in the address bar. The Google Chrome-only banner is suppressed when MH Browser's own install control is present. The Google-owned **Add to Chrome** button is not the installer and may remain disabled; Chrome does not expose its Web Store install API to Electron.
+
+The installer fetches a CRX3 package over HTTPS, verifies the cryptographic CRX3 signature and requested extension ID, validates archive paths and sizes, displays the requested permissions for confirmation, then loads the unpacked extension into MH Browser's persistent Chromium session. The signed public key is preserved so Electron loads the extension with the correct Web Store ID. The Extensions panel supports enable, disable and remove, including persistence across restarts. Installation and permissions require user confirmation.
+
+**Compatibility:** Electron does not implement all Chrome extension APIs, service-worker behavior or Google Web Store installation protocols. Some extensions may install but still lack functionality. No guarantee is made that every Web Store extension or theme works. Chrome themes are not supported by this integration. The build checks signed-package parsing, tamper rejection, script syntax, browser startup and navigation. A separate optional Electron extension integration test runs only when the Electron development executable is available. **End-to-end live installation from Google and every extension's actual behavior require manual Windows testing.**
 
 ## Implemented desktop capabilities
 
