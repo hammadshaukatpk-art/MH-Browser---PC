@@ -33,6 +33,11 @@ jobs:
           python build/brand_assets.py
       - name: Install desktop dependencies
         run: npm install --no-audit --no-fund
+      - name: Smoke-test Electron extension install and removal
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath 'node_modules/electron/dist/electron.exe' -ArgumentList 'tests/extension-smoke.js' -PassThru -Wait -NoNewWindow
+          if ($p.ExitCode -ne 0) { throw "Electron extension integration test failed with exit code $($p.ExitCode)" }
       - name: Smoke-test source Electron startup
         shell: pwsh
         run: ./tests/smoke-startup.ps1 -Source
