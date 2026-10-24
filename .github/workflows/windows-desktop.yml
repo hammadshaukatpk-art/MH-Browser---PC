@@ -1,0 +1,97 @@
+name: MH Browser Windows installer
+on:
+  push:
+    branches: [main, feature/windows-desktop-browser]
+    paths:
+      - 'desktop/**'
+      - '.github/workflows/windows-desktop.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: mh-browser-windows-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  installer:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Generate branded icon and installer artwork
+        shell: pwsh
+        run: |
+          python -m pip install --disable-pip-version-check Pillow
+          New-Item -ItemType Directory -Force -Path build | Out-Null
+          python build/brand_assets.py
+      - name: Install desktop dependencies
+        run: npm install --no-audit --no-fund
+      - name: Smoke-test Electron extension install and removal
+        shell: pwsh
+        run: |
+          $electron = 'node_modules/electron/dist/electron.exe'
+          if (Test-Path $electron) {
+            $p = Start-Process -FilePath $electron -ArgumentList 'tests/extension-smoke.js' -PassThru -Wait -NoNewWindow
+            if ($p.ExitCode -ne 0) { throw "Electron extension integration test failed with exit code $($p.ExitCode)" }
+          } else {
+            Write-Warning 'Electron development executable unavailable in CI; skipping extension integration test. CRX3 unit tests and packaged startup checks still required.'
+          }
+      - name: Smoke-test source Electron startup
+        shell: pwsh
+        run: ./tests/smoke-startup.ps1 -Source
+      - name: Download FFmpeg
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path media-tools | Out-Null
+          Invoke-WebRequest -Uri 'https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip' -OutFile ffmpeg.zip
+          Expand-Archive ffmpeg.zip -DestinationPath ffmpeg-unpacked
+          Copy-Item (Get-ChildItem ffmpeg-unpacked -Recurse -Filter ffmpeg.exe | Select-Object -First 1).FullName media-tools/ffmpeg.exe
+          Copy-Item (Get-ChildItem ffmpeg-unpacked -Recurse -Filter ffprobe.exe | Select-Object -First 1).FullName media-tools/ffprobe.exe
+      - name: Download and verify official site-media component
+        shell: pwsh
+        run: |
+          $version = '2026.08.19'
+          $base = "https://github.com/yt-dlp/yt-dlp/releases/download/$version"
+          Invoke-WebRequest -Uri "$base/SHA2-256SUMS" -OutFile 'yt-dlp-checksums.txt'
+          Invoke-WebRequest -Uri "$base/yt-dlp.exe" -OutFile 'media-tools/yt-dlp.exe'
+          $hashLine = Get-Content 'yt-dlp-checksums.txt' | Where-Object { $_ -match 'yt-dlp[.]exe' } | Select-Object -First 1
+          if (-not $hashLine) { throw 'yt-dlp checksum missing' }
+          $expected = ($hashLine.Trim() -split '\s+')[0].ToUpperInvariant()
+          $actual = (Get-FileHash 'media-tools/yt-dlp.exe' -Algorithm SHA256).Hash
+          if ($actual -ne $expected) { throw 'yt-dlp checksum mismatch' }
+      - name: Validate desktop scripts and assets
+        shell: pwsh
+        run: |
+          node --check main.js
+          node --check media.js
+          node --check site-media.js
+          node --check pip.js
+          node --check chrome-store.js
+          node --check store-ui.js
+          node --check navigation-smoke.js
+          node --check ui/app.js
+          node tests/chrome-store.test.js
+          if (-not (Test-Path 'ui/assets/mh-logo-clean.png')) { throw 'Missing MH logo' }
+          if (-not (Test-Path 'build/mh-browser.ico')) { throw 'Missing Windows icon' }
+          python -c "from PIL import Image; im=Image.open('ui/assets/mh-logo-clean.png').convert('RGBA'); assert im.size==(768,768); assert im.getpixel((0,0))[3]==0; assert im.getpixel((384,384))[3]==255; print('Logo transparency and HD size verified')"
+      - name: Build EXE installer
+        run: npm run dist
+      - name: Smoke-test installed browser executable
+        shell: pwsh
+        run: ./tests/smoke-startup.ps1
+      - name: Smoke-test cross-site link clicks and Back
+        shell: pwsh
+        run: ./tests/smoke-navigation.ps1
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: MH-Browser-Windows-Installer
+          path: desktop/dist/*.exe
+          if-no-files-found: error
