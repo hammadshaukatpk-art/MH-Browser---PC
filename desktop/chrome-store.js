@@ -40,6 +40,59 @@ function extractZipBytes(buffer){
  if(offset>=buffer.length||buffer.subarray(offset,offset+4).toString('ascii')!=='PK\x03\x04')throw new Error('Chrome extension archive is missing or corrupt');
  return buffer.subarray(offset);
 }
+
+// CRX3 signed packages contain a protobuf header and a signed payload.
+// Verify the package against the public key which produces the requested
+// Chrome extension ID; otherwise a redirect could install another extension.
+function fields(bytes){
+ const output=new Map();let pos=0;
+ function varint(){let n=0,shift=0;while(pos<bytes.length&&shift<56){const b=bytes[pos++];n+=(b&127)*2**shift;if(!(b&128))return n;shift+=7}throw new Error('Invalid CRX3 protobuf integer')}
+ while(pos<bytes.length){
+  const tag=varint(),number=Math.floor(tag/8),wire=tag%8;
+  if(!number)throw new Error('Invalid CRX3 protobuf field');
+  let value;
+  if(wire===0)value=varint();
+  else if(wire===2){const size=varint();if(size>bytes.length-pos)throw new Error('Invalid CRX3 protobuf length');value=bytes.subarray(pos,pos+size);pos+=size}
+  else if(wire===1||wire===5){const size=wire===1?8:4;if(size>bytes.length-pos)throw new Error('Invalid CRX3 protobuf length');value=bytes.subarray(pos,pos+size);pos+=size}
+  else throw new Error('Unsupported CRX3 protobuf field');
+  if(!output.has(number))output.set(number,[]);output.get(number).push(value);
+ }
+ return output;
+}
+function extensionIdFromKey(der){
+ const digest=crypto.createHash('sha256').update(der).digest();
+ return Array.from(digest.subarray(0,16),b=>String.fromCharCode(97+(b>>>4))+String.fromCharCode(97+(b&15))).join('');
+}
+function verifyCrx3(buffer,expectedId){
+ if(buffer.subarray(0,4).toString('ascii')!=='Cr24'||buffer.length<16||buffer.readUInt32LE(4)!==3)throw new Error('Chrome Web Store did not return a signed CRX3 extension');
+ const headerSize=buffer.readUInt32LE(8);
+ if(headerSize<1||headerSize>2*1024*1024||headerSize+12>=buffer.length)throw new Error('Invalid signed extension header');
+ const header=fields(buffer.subarray(12,12+headerSize));
+ const signedHeader=header.get(10000)?.[0];
+ if(!Buffer.isBuffer(signedHeader))throw new Error('Missing CRX3 signed extension header');
+ const crxId=fields(signedHeader).get(1)?.[0];
+ if(!Buffer.isBuffer(crxId)||crxId.length!==16)throw new Error('Invalid signed extension identity');
+ const expectedBytes=Buffer.from(Array.from(expectedId,c=>c.charCodeAt(0)-97).reduce((a,n,i)=>{if(i%2===0)a.push(n<<4);else a[a.length-1]|=n;return a},[]));
+ if(!crxId.equals(expectedBytes))throw new Error('Downloaded extension ID does not match the selected Chrome Web Store page');
+ const zip=buffer.subarray(12+headerSize);
+ if(zip.subarray(0,4).toString('ascii')!=='PK\x03\x04')throw new Error('Signed extension ZIP payload is missing');
+ const signedPrefix=Buffer.from('CRX3 SignedData\0','ascii');
+ const signedLength=Buffer.alloc(4);signedLength.writeUInt32LE(signedHeader.length);
+ const payload=Buffer.concat([signedPrefix,signedLength,signedHeader,zip]);
+ for(const [number,algorithm] of [[2,'rsa'],[3,'ec']]){
+  for(const proof of header.get(number)||[]){
+   const f=fields(proof),keyBytes=f.get(1)?.[0],signature=f.get(2)?.[0];
+   if(!Buffer.isBuffer(keyBytes)||!Buffer.isBuffer(signature)||extensionIdFromKey(keyBytes)!==expectedId)continue;
+   try{
+    const key=crypto.createPublicKey({key:keyBytes,format:'der',type:'spki'});
+    if(key.asymmetricKeyType!==(algorithm==='rsa'?'rsa':'ec'))continue;
+    if(crypto.verify('sha256',payload,key,signature))return{zip,key:keyBytes};
+   }catch{}
+  }
+ }
+ throw new Error('Chrome extension signature verification failed');
+}
+
 function unpack(zipBytes,folder){
  const zip=new AdmZip(zipBytes),entries=zip.getEntries();
  if(!entries.length||entries.length>3000)throw new Error('Invalid number of extension files');
@@ -73,8 +126,17 @@ async function prepareExtension({id,userData,chromeVersion}){
  const version=String(chromeVersion||'131.0.0.0').replace(/[^\d.]/g,'')||'131.0.0.0';
  const url='https://clients2.google.com/service/update2/crx?response=redirect&prodversion='+encodeURIComponent(version)+'&acceptformat=crx3&x='+encodeURIComponent('id='+id+'&uc');
  const buffer=await download(url);
+ const verified=verifyCrx3(buffer,id);
  const temp=path.join(root,'.tmp-'+id+'-'+crypto.randomBytes(5).toString('hex'));
  fs.mkdirSync(temp,{recursive:true});
- try{const manifest=unpack(extractZipBytes(buffer),temp);return{temp,dest,manifest}}catch(e){fs.rmSync(temp,{recursive:true,force:true});throw e}
+ try{
+  const manifest=unpack(verified.zip,temp);
+  // Keep Chromium's original ID (derived from the CRX signing key)
+  // rather than letting Electron derive a different ID from a temp path.
+  if(manifest.key&&manifest.key!==verified.key.toString('base64'))throw new Error('Manifest public key differs from signed CRX3 identity');
+  manifest.key=verified.key.toString('base64');
+  fs.writeFileSync(path.join(temp,'manifest.json'),JSON.stringify(manifest,null,2));
+  return{temp,dest,manifest};
+ }catch(e){fs.rmSync(temp,{recursive:true,force:true});throw e}
 }
-module.exports={extensionIdFromURL,prepareExtension,_extractZipBytes:extractZipBytes,_unpack:unpack};
+module.exports={extensionIdFromURL,prepareExtension,_extractZipBytes:extractZipBytes,_unpack:unpack,_verifyCrx3:verifyCrx3,_extensionIdFromKey:extensionIdFromKey};
