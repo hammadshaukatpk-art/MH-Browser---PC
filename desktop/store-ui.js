@@ -1,5 +1,77 @@
 'use strict';
-// Reuse the Web Store's existing installation button. No floating duplicate.
-// Chromium-only installation is handled by MH Browser's native installer.
-function overlayScript(){return "(()=>{\ntry{\n if(location.hostname!=='chromewebstore.google.com')return;\n const detail=()=>/^\\/detail\\/(?:[^/]+\\/)?[a-p]{32}\\/?$/i.test(location.pathname);\n const installLabels=[\n /^add to chrome$/i,/^use in chrome$/i,/^install(?: extension)?$/i,\n /^usar no chrome$/i,/^adicionar ao chrome$/i,/^instalar(?: extensão)?$/i,\n /^añadir a chrome$/i,/^agregar a chrome$/i,/^usar en chrome$/i,\n /^ajouter à chrome$/i,/^utiliser dans chrome$/i,\n /^zu chrome hinzufügen$/i,/^in chrome verwenden$/i,\n /^aggiungi a chrome$/i,/^usa in chrome$/i,\n /^chrome に追加$/i,/^chromeに追加$/i,/^chrome にインストール$/i,\n /^添加至 chrome$/i,/^加到 chrome$/i,/^chrome에 추가$/i,\n /^chrome'a ekle$/i,/^tambahkan ke chrome$/i,\n /^добавить в chrome$/i,/^dodaj do chrome$/i,\n /^chrome में जोड़ें$/i,/^chrome میں شامل کریں$/i,/^إضافة إلى chrome$/i\n ];\n const bannerLabels=[\n /switch to chrome to install extensions and themes/i,\n /mude para o chrome para instalar extensões e temas/i,\n /cambia a chrome para instalar extensiones y temas/i,\n /passez à chrome pour installer des extensions et des thèmes/i,\n /wechseln sie zu chrome, um erweiterungen und designs zu installieren/i,\n /passa a chrome per installare estensioni e temi/i,\n /chrome に切り替えて拡張機能とテーマをインストール/i,\n /перейдите в chrome, чтобы установить расширения/i,\n /chrome'a geçerek uzantıları ve temaları yükleyin/i,\n /beralih ke chrome untuk menginstal ekstensi dan tema/i\n ];\n const chromeLinks=[/install chrome/i,/install google chrome/i,/instalar o google chrome/i,/instalar google chrome/i,/installer chrome/i,/chrome installieren/i,/installa chrome/i,/chrome をインストール/i];\n const text=n=>(n?.innerText||n?.textContent||'').replace(/\\s+/g,' ').trim();\n let installed=false,lastPath=location.pathname;\n const findButton=()=>{\n  const candidates=document.querySelectorAll('button,[role=\"button\"]');\n  for(const b of candidates){\n   if(b.dataset.mhNativeInstall==='yes')return b;\n   const label=text(b).slice(0,100);\n   const aria=b.getAttribute('aria-label')||'';\n   if(installLabels.some(re=>re.test(label)||re.test(aria)))return b;\n  }\n  return null;\n };\n const hideChromeBanner=()=>{\n  const candidates=document.querySelectorAll('div,aside,section,[role=\"alert\"]');\n  for(const node of candidates){\n   if(node.dataset.mhChromeBannerHidden==='yes')continue;\n   const message=text(node);\n   if(message.length<20||message.length>420||!bannerLabels.some(re=>re.test(message)))continue;\n   if(node.querySelector('[data-mh-native-install=\"yes\"]'))continue;\n   let target=node;\n   for(let i=0;i<4&&target.parentElement;i++){\n    const parent=target.parentElement,words=text(parent);\n    if(words.length>440||parent.querySelector('[data-mh-native-install=\"yes\"]'))break;\n    if(chromeLinks.some(re=>re.test(words))){target=parent;break}\n    target=parent;\n   }\n   target.dataset.mhChromeBannerHidden='yes';\n   target.style.setProperty('display','none','important');\n  }\n };\n const update=()=>{\n  if(!detail())return;\n  if(location.pathname!==lastPath){lastPath=location.pathname;installed=false}\n  const b=findButton();\n  if(b){\n   b.dataset.mhNativeInstall='yes';\n   if(b.disabled)b.disabled=false;\n   if(b.hasAttribute('disabled'))b.removeAttribute('disabled');\n   if(b.getAttribute('aria-disabled')==='true'&&!installed)b.setAttribute('aria-disabled','false');\n   b.style.setProperty('pointer-events','auto','important');\n   b.style.setProperty('cursor',installed?'default':'pointer','important');\n   b.style.setProperty('opacity','1','important');\n   b.style.setProperty('background-color',installed?'#23784d':'#0b57d0','important');\n   b.style.setProperty('color','#fff','important');\n   if(installed){if(text(b)!=='Installed in MH Browser')b.textContent='Installed in MH Browser';b.setAttribute('aria-disabled','true')}\n   else{if(text(b)!=='Add to MH Browser')b.textContent='Add to MH Browser';b.title='Install directly in MH Browser, without Google Chrome'}\n  }\n  hideChromeBanner();\n };\n if(!window.__mhNativeStoreInstall){\n  window.__mhNativeStoreInstall=true;\n  document.addEventListener('click',e=>{\n   const b=e.target?.closest?.('[data-mh-native-install=\"yes\"]');\n   if(!b||!detail())return;\n   e.preventDefault();e.stopImmediatePropagation();\n   if(!installed)window.open('mh-browser-extension://install','_blank');\n  },true);\n  window.addEventListener('mh-extension-installed',()=>{installed=true;update()});\n  let pending=false;\n  const observer=new MutationObserver(()=>{\n   if(pending)return;pending=true;\n   setTimeout(()=>{pending=false;update()},250);\n  });\n  observer.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['disabled','aria-disabled']});\n  window.addEventListener('popstate',()=>setTimeout(update,80));\n }\n update();\n}catch(e){console.debug('MH Browser Chrome Web Store integration:',e)}\n})()";}
+// Patches only the Chrome Web Store's existing install button, not an overlay.
+// Runs in the website's renderer and forwards explicit user clicks to MH Browser.
+function pageControl(){
+ if(location.hostname!=='chromewebstore.google.com')return;
+ const matchesDetail=()=>/^\/detail\/(?:[^/]+\/)?[a-p]{32}\/?$/i.test(location.pathname);
+ const state=window.__mhStoreControl||(window.__mhStoreControl={installed:false,lastPath:location.pathname});
+ const label=n=>String(n?.innerText||n?.textContent||'').replace(/\s+/g,' ').trim();
+ const installText=/^(add to chrome|use in chrome|install(?: extension)?|usar no chrome|adicionar ao chrome|instalar(?: extensão)?|añadir a chrome|agregar a chrome|usar en chrome|ajouter à chrome|utiliser dans chrome|zu chrome hinzufügen|in chrome verwenden|aggiungi a chrome|usa in chrome|chrome に追加|chromeに追加|添加至 chrome|加到 chrome|chrome에 추가|chrome'a ekle|tambahkan ke chrome|добавить в chrome|dodaj do chrome|chrome में जोड़ें|chrome میں شامل کریں|إضافة إلى chrome|add to mh browser|installed in mh browser)$/i;
+ const warningText=/switch to chrome to install|mude para o chrome para instalar|cambia a chrome para instalar|passez à chrome pour installer|wechseln sie zu chrome|passa a chrome per installare|chrome に切り替え|перейдите в chrome|chrome'a geçerek|beralih ke chrome untuk menginstal|chrome.*install.*extensions and themes/i;
+ const chromeLink=/install chrome|install google chrome|instalar o google chrome|instalar google chrome|installer chrome|chrome installieren|installa chrome|chrome をインストール/i;
+ function existingButton(){
+  for(const node of document.querySelectorAll('button,[role="button"]')){
+   if(node.dataset.mhStoreButton==='yes')return node;
+   if(installText.test(label(node))||installText.test(node.getAttribute('aria-label')||''))return node;
+  }
+  return null;
+ }
+ function hideBanner(){
+  for(const node of document.querySelectorAll('div,aside,section,[role="alert"]')){
+   if(node.dataset.mhStoreBanner==='yes')continue;
+   const t=label(node);
+   if(t.length<20||t.length>450||!warningText.test(t))continue;
+   let target=node;
+   for(let i=0;i<4&&target.parentElement;i++){
+    const p=target.parentElement,pt=label(p);
+    if(pt.length>500||p.querySelector('[data-mh-store-button="yes"]'))break;
+    target=p;
+    if(chromeLink.test(pt))break;
+   }
+   target.dataset.mhStoreBanner='yes';
+   target.style.setProperty('display','none','important');
+  }
+ }
+ function update(){
+  if(!matchesDetail())return;
+  if(state.lastPath!==location.pathname){state.lastPath=location.pathname;state.installed=false}
+  const b=existingButton();
+  if(b){
+   b.dataset.mhStoreButton='yes';
+   b.disabled=false;
+   b.removeAttribute('disabled');
+   b.setAttribute('aria-disabled',state.installed?'true':'false');
+   b.style.setProperty('pointer-events','auto','important');
+   b.style.setProperty('opacity','1','important');
+   b.style.setProperty('cursor',state.installed?'default':'pointer','important');
+   b.style.setProperty('background-color',state.installed?'#23784d':'#0b57d0','important');
+   b.style.setProperty('color','#fff','important');
+   const desired=state.installed?'Installed in MH Browser':'Add to MH Browser';
+   if(label(b)!==desired)b.textContent=desired;
+   b.title=state.installed?'Installed in MH Browser':'Install this extension directly in MH Browser';
+  }
+  hideBanner();
+ }
+ if(!state.listener){
+  state.listener=true;
+  document.addEventListener('click',e=>{
+   const b=e.target?.closest?.('[data-mh-store-button="yes"]');
+   if(!b||!matchesDetail())return;
+   e.preventDefault();e.stopImmediatePropagation();
+   if(!state.installed)window.open('mh-browser-extension://install','_blank');
+  },true);
+  window.addEventListener('mh-extension-installed',()=>{state.installed=true;update()});
+  window.addEventListener('mh-extension-uninstalled',()=>{state.installed=false;update()});
+  let pending=false;
+  const observer=new MutationObserver(()=>{
+   if(pending)return;
+   pending=true;
+   setTimeout(()=>{pending=false;update()},220);
+  });
+  observer.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['disabled','aria-disabled']});
+  window.addEventListener('popstate',()=>setTimeout(update,100));
+ }
+ update();
+}
+function overlayScript(){return '('+pageControl.toString()+')()'}
 module.exports={overlayScript};
