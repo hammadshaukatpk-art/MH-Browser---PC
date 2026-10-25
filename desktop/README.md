@@ -14,7 +14,7 @@ npm install
 npm run dist
 ```
 
-The unsigned Windows installer is written to `desktop/dist/MH-Browser-Setup-1.1.5.exe` when packaging succeeds.
+The unsigned Windows installer is written to `desktop/dist/MH-Browser-Setup-1.1.6.exe` when packaging succeeds.
 
 ## Chrome Web Store integration (v1.1.5)
 
@@ -120,3 +120,10 @@ The existing Android application and source are the functional reference; do not
 - Adds Windows native right-click menus for the address field (cut/copy/paste/select all/copy page address) and web content (copy link address, media address, Back, Reload).
 - Extension popups remain open until explicitly closed, instead of closing immediately on loss of focus. All enabled extension toolbar icons are shown.
 - Extension APIs remain limited by Electron; a visible popup does not guarantee the extension can modify audio or interact with the active tab. Chrome-only extensions and themes are not guaranteed to work.
+
+## v1.1.6 media regression fix
+
+- Preserves fast Chromium-observed direct-file and HLS media detection and downloads independently of the optional website extractor.
+- Uses the signed-in MH Browser session's matching site cookies for website-format lookup and download in a temporary local cookie file, removed after the operation. No password extraction, external cookie upload, or bypass of access restrictions is implemented.
+- Prevents raw yt-dlp error dumps from replacing available media choices, and retries transient lookup failures after 20 seconds.
+- Website bot checks, login requirements, DRM and rate limiting can still prevent some downloads; this release does not guarantee downloads from every YouTube video.
