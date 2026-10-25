@@ -78,6 +78,7 @@ jobs:
           node --check navigation-smoke.js
           node --check ui/app.js
           node tests/chrome-store.test.js
+          node tests/store-ui.test.js
           if (-not (Test-Path 'ui/assets/mh-logo-clean.png')) { throw 'Missing MH logo' }
           if (-not (Test-Path 'build/mh-browser.ico')) { throw 'Missing Windows icon' }
           python -c "from PIL import Image; im=Image.open('ui/assets/mh-logo-clean.png').convert('RGBA'); assert im.size==(768,768); assert im.getpixel((0,0))[3]==0; assert im.getpixel((384,384))[3]==255; print('Logo transparency and HD size verified')"
