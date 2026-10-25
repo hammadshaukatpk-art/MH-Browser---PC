@@ -14,11 +14,11 @@ npm install
 npm run dist
 ```
 
-The unsigned Windows installer is written to `desktop/dist/MH-Browser-Setup-1.1.4.exe` when packaging succeeds.
+The unsigned Windows installer is written to `desktop/dist/MH-Browser-Setup-1.1.5.exe` when packaging succeeds.
 
-## Chrome Web Store integration (v1.1.4)
+## Chrome Web Store integration (v1.1.5)
 
-On a Chrome Web Store extension detail page, MH Browser provides its own **Install in MH Browser** control, as well as **+ Extension** in the address bar. The Google Chrome-only banner is suppressed when MH Browser's own install control is present. The Google-owned **Add to Chrome** button is not the installer and may remain disabled; Chrome does not expose its Web Store install API to Electron.
+On a Chrome Web Store extension detail page, MH Browser activates the **existing store install button** as **Add to MH Browser**. There is no extra floating or address-bar installation button. The Google Chrome-only banner is suppressed when MH Browser's own install control is present. The Google-owned **Add to Chrome** button is not the installer and may remain disabled; Chrome does not expose its Web Store install API to Electron.
 
 The installer fetches a CRX3 package over HTTPS, verifies the cryptographic CRX3 signature and requested extension ID, validates archive paths and sizes, displays the requested permissions for confirmation, then loads the unpacked extension into MH Browser's persistent Chromium session. The signed public key is preserved so Electron loads the extension with the correct Web Store ID. The Extensions panel supports enable, disable and remove, including persistence across restarts. Installation and permissions require user confirmation.
 
@@ -113,3 +113,10 @@ The existing Android application and source are the functional reference; do not
 - **Compatibility limits:** Chrome Web Store's own **Add to Chrome / Install Chrome** button is not connected to Electron. Electron implements only a subset of Chrome extension APIs, so some store extensions cannot be installed or may install but not function completely. The CRX service can reject certain packages. Extension updates are not automatic; manually remove and reinstall to update. Only install extensions you trust.
 - **Links and Back:** Ordinary cross-site website links are no longer discarded by popup filtering. Normal target-blank links navigate in the current tab to keep Back usable, while explicitly requested background/foreground tabs can open separately. Navigation uses Electron's current `navigationHistory` API with fallback for older versions.
 - **Release checks:** CI verifies Chrome Web Store ID parsing, CRX3 unpacking, packaged-app startup, and real link-click / Back behavior across two local website origins before uploading an installer.
+
+## v1.1.5 refinements
+
+- Uses the Chrome Web Store's existing install button (not a floating overlay), with Portuguese/English Chrome-only banner hiding and installed-state restoration.
+- Adds Windows native right-click menus for the address field (cut/copy/paste/select all/copy page address) and web content (copy link address, media address, Back, Reload).
+- Extension popups remain open until explicitly closed, instead of closing immediately on loss of focus. All enabled extension toolbar icons are shown.
+- Extension APIs remain limited by Electron; a visible popup does not guarantee the extension can modify audio or interact with the active tab. Chrome-only extensions and themes are not guaranteed to work.
