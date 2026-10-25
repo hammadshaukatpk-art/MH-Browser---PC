@@ -77,7 +77,7 @@ function switchTab(id){if(!tabs.has(id))return;activeId=id;hideOrShow(tabs.get(i
 function closeTab(id){const t=tabs.get(id);if(!t)return;mainWindow.contentView.removeChildView(t.view);t.view.webContents.close();tabs.delete(id);if(t.private)privateCount--;if(activeId===id){activeId=[...tabs.keys()].at(-1)||null;if(!activeId)createTab(HOME,false,true);else switchTab(activeId)}emit()}
 const current=()=>tabs.get(activeId);
 function applyTheme(){nativeTheme.themeSource=settings.theme==='light'?'light':'dark';send('settings',settings)}
-function init(){diagnostic('Starting MH Browser '+app.getVersion());load();migrateShortcuts();initFilters();app.setAppUserModelId('com.mhdevelopers.browser');for(const folder of state.extensions||[]){if((state.disabledExtensions||[]).some(d=>d.path===folder))continue;if(fs.existsSync(path.join(folder,'manifest.json')))session.fromPartition('persist:mh-regular').loadExtension(folder,{allowFileAccess:false}).catch(e=>console.warn('Extension could not be loaded:',e.message))}mainWindow=new BrowserWindow({icon:path.join(process.resourcesPath||__dirname,'mh-browser.ico'),width:1350,height:850,minWidth:750,minHeight:500,title:'MH Browser',backgroundColor:'#071326',autoHideMenuBar:true,webPreferences:{preload:path.join(__dirname,'preload.js'),contextIsolation:true,nodeIntegration:false,sandbox:true}});mainWindow.webContents.on('render-process-gone',(_event,details)=>{diagnostic('Browser UI renderer exited: '+details.reason+' code '+details.exitCode);if(!mainWindow?.isDestroyed()&&details.reason!=='clean-exit'){mainWindow.loadFile(path.join(__dirname,'ui','index.html')).catch(e=>diagnostic('Cannot recover UI',e))}});
+function init(){diagnostic('Starting MH Browser '+app.getVersion());load();migrateShortcuts();initFilters();app.setAppUserModelId('com.mhdevelopers.browser');const extensionLoads=[];for(const folder of state.extensions||[]){if((state.disabledExtensions||[]).some(d=>d.path===folder))continue;if(fs.existsSync(path.join(folder,'manifest.json')))extensionLoads.push(session.fromPartition('persist:mh-regular').loadExtension(folder,{allowFileAccess:false}).catch(e=>diagnostic('Extension could not be restored: '+folder,e)))}mainWindow=new BrowserWindow({icon:path.join(process.resourcesPath||__dirname,'mh-browser.ico'),width:1350,height:850,minWidth:750,minHeight:500,title:'MH Browser',backgroundColor:'#071326',autoHideMenuBar:true,webPreferences:{preload:path.join(__dirname,'preload.js'),contextIsolation:true,nodeIntegration:false,sandbox:true}});mainWindow.webContents.on('render-process-gone',(_event,details)=>{diagnostic('Browser UI renderer exited: '+details.reason+' code '+details.exitCode);if(!mainWindow?.isDestroyed()&&details.reason!=='clean-exit'){mainWindow.loadFile(path.join(__dirname,'ui','index.html')).catch(e=>diagnostic('Cannot recover UI',e))}});
 mainWindow.webContents.on('did-fail-load',(_event,code,description,url)=>diagnostic('Browser UI failed to load: '+code+' '+description+' '+url));
 mainWindow.webContents.on('context-menu',(_event,params)=>{
  const wc=mainWindow.webContents;
@@ -96,8 +96,11 @@ mainWindow.webContents.on('context-menu',(_event,params)=>{
  }
  if(items.length)Menu.buildFromTemplate(items).popup({window:mainWindow,x:params.x,y:params.y});
 });
-mainWindow.loadFile(path.join(__dirname,'ui','index.html')).catch(e=>diagnostic('Browser UI load failed',e));mainWindow.on('resize',layout);mainWindow.on('close',save);mainWindow.on('closed',()=>{mainWindow=null});mainWindow.webContents.on('did-finish-load',()=>{
+mainWindow.loadFile(path.join(__dirname,'ui','index.html')).catch(e=>diagnostic('Browser UI load failed',e));mainWindow.on('resize',layout);mainWindow.on('close',save);mainWindow.on('closed',()=>{mainWindow=null});mainWindow.webContents.on('did-finish-load',async()=>{
   diagnostic('Browser UI loaded');
+  // Load persisted extensions before navigating restored tabs so content
+  // scripts can attach to the first website visit after browser startup.
+  await Promise.race([Promise.allSettled(extensionLoads),new Promise(resolve=>setTimeout(resolve,5000))]);
   try{
     diagnostic('Applying theme');applyTheme();diagnostic('Reading extensions');send('extensions',extensionList());diagnostic('Extensions read');
     if(tabs.size){layout();emit();return}
