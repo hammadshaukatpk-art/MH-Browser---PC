@@ -14,7 +14,7 @@ function run(originalLabel,bannerLabel){
   hasAttribute(key){return Object.hasOwn(this.attributes,key)},
   removeAttribute(key){delete this.attributes[key]},
   setAttribute(key,value){this.attributes[key]=value},
-  closest(selector){return selector==='[data-mh-native-install="yes"]'&&this.dataset.mhNativeInstall==='yes'?this:null}
+  closest(selector){return selector==='[data-mh-store-button="yes"]'&&this.dataset.mhStoreButton==='yes'?this:null}
  };
  const banner={
   innerText:bannerLabel,textContent:bannerLabel,dataset:{},
@@ -34,9 +34,9 @@ function run(originalLabel,bannerLabel){
   open(url){opened=url},
   addEventListener(name,handler){events[name]=handler}
  };
- const context={window,document,location:{hostname:'chromewebstore.google.com',pathname:'/detail/volume-booster/ejiikneibegknkgjimmihdpcbcedgmpo'},MutationObserver:class{observe(){}},setTimeout(){}};
+ const context={window,document,location:{hostname:'chromewebstore.google.com',pathname:'/detail/volume-booster/ejiikneibegknkgjimmihdpcbcedgmpo'},MutationObserver:class{observe(){}},setTimeout(){},console};
  vm.runInNewContext(script,context);
- assert.equal(button.dataset.mhNativeInstall,'yes');
+ assert.equal(button.dataset.mhStoreButton,'yes');
  assert.equal(button.disabled,false);
  assert.equal(button.hasAttribute('disabled'),false);
  assert.equal(button.getAttribute('aria-disabled'),'false');
