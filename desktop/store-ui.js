@@ -1,41 +1,5 @@
 'use strict';
-// In-page control on Chrome Web Store detail pages. It does not impersonate
-// Chrome or claim to enable Google's disabled "Add to Chrome" API.
-function overlayScript(){
- return `(()=>{
-  try{
-   if(location.hostname!=='chromewebstore.google.com'||!/^\\/detail\\/(?:[^/]+\\/)?[a-p]{32}\\/?$/i.test(location.pathname))return;
-   const id='mh-native-extension-install';
-   const install=()=>{
-    let b=document.getElementById(id);
-    if(!b){
-     b=document.createElement('button');b.id=id;b.type='button';
-     b.textContent='＋ Install in MH Browser';
-     b.title='Install this compatible extension directly in MH Browser (without Google Chrome)';
-     b.style.cssText='all:initial!important;position:fixed!important;right:26px!important;top:230px!important;z-index:2147483646!important;padding:14px 19px!important;border-radius:28px!important;background:#1558d6!important;color:#fff!important;font:600 14px Arial,sans-serif!important;box-shadow:0 5px 18px #0003!important;cursor:pointer!important;';
-     b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();window.open('mh-browser-extension://install','_blank')});
-    }
-    if(!b.isConnected)document.body?.appendChild(b);
-    // Only suppress the Chrome-only installation banner when MH Browser's
-    // replacement action has actually been mounted.
-    if(!b.isConnected)return;
-    for(const node of document.querySelectorAll('div,[role="alert"]')){
-     if(node.id===id||node.contains(b))continue;
-     const message=(node.innerText||'').trim();
-     if(message.length>180||!message.includes('Switch to Chrome to install extensions and themes'))continue;
-     const parent=node.parentElement;
-     if(parent&&parent.innerText?.trim().length<200&&parent.querySelectorAll('button').length<=2)parent.style.display='none';
-     else node.style.display='none';
-    }
-   };
-   install();
-   if(!window.__mhStoreObserver){
-    let timer;
-    const observer=new MutationObserver(()=>{clearTimeout(timer);timer=setTimeout(install,250)});
-    observer.observe(document.documentElement,{childList:true,subtree:true});
-    window.__mhStoreObserver=observer;
-   }
-  }catch(e){console.debug('MH Browser extension install control:',e)}
- })()`;
-}
+// Reuse the Web Store's existing installation button. No floating duplicate.
+// Chromium-only installation is handled by MH Browser's native installer.
+function overlayScript(){return "(()=>{\ntry{\n if(location.hostname!=='chromewebstore.google.com')return;\n const detail=()=>/^\\/detail\\/(?:[^/]+\\/)?[a-p]{32}\\/?$/i.test(location.pathname);\n const installLabels=[\n /^add to chrome$/i,/^use in chrome$/i,/^install(?: extension)?$/i,\n /^usar no chrome$/i,/^adicionar ao chrome$/i,/^instalar(?: extensão)?$/i,\n /^añadir a chrome$/i,/^agregar a chrome$/i,/^usar en chrome$/i,\n /^ajouter à chrome$/i,/^utiliser dans chrome$/i,\n /^zu chrome hinzufügen$/i,/^in chrome verwenden$/i,\n /^aggiungi a chrome$/i,/^usa in chrome$/i,\n /^chrome に追加$/i,/^chromeに追加$/i,/^chrome にインストール$/i,\n /^添加至 chrome$/i,/^加到 chrome$/i,/^chrome에 추가$/i,\n /^chrome'a ekle$/i,/^tambahkan ke chrome$/i,\n /^добавить в chrome$/i,/^dodaj do chrome$/i,\n /^chrome में जोड़ें$/i,/^chrome میں شامل کریں$/i,/^إضافة إلى chrome$/i\n ];\n const bannerLabels=[\n /switch to chrome to install extensions and themes/i,\n /mude para o chrome para instalar extensões e temas/i,\n /cambia a chrome para instalar extensiones y temas/i,\n /passez à chrome pour installer des extensions et des thèmes/i,\n /wechseln sie zu chrome, um erweiterungen und designs zu installieren/i,\n /passa a chrome per installare estensioni e temi/i,\n /chrome に切り替えて拡張機能とテーマをインストール/i,\n /перейдите в chrome, чтобы установить расширения/i,\n /chrome'a geçerek uzantıları ve temaları yükleyin/i,\n /beralih ke chrome untuk menginstal ekstensi dan tema/i\n ];\n const chromeLinks=[/install chrome/i,/install google chrome/i,/instalar o google chrome/i,/instalar google chrome/i,/installer chrome/i,/chrome installieren/i,/installa chrome/i,/chrome をインストール/i];\n const text=n=>(n?.innerText||n?.textContent||'').replace(/\\s+/g,' ').trim();\n let installed=false,lastPath=location.pathname;\n const findButton=()=>{\n  const candidates=document.querySelectorAll('button,[role=\"button\"]');\n  for(const b of candidates){\n   if(b.dataset.mhNativeInstall==='yes')return b;\n   const label=text(b).slice(0,100);\n   const aria=b.getAttribute('aria-label')||'';\n   if(installLabels.some(re=>re.test(label)||re.test(aria)))return b;\n  }\n  return null;\n };\n const hideChromeBanner=()=>{\n  const candidates=document.querySelectorAll('div,aside,section,[role=\"alert\"]');\n  for(const node of candidates){\n   if(node.dataset.mhChromeBannerHidden==='yes')continue;\n   const message=text(node);\n   if(message.length<20||message.length>420||!bannerLabels.some(re=>re.test(message)))continue;\n   if(node.querySelector('[data-mh-native-install=\"yes\"]'))continue;\n   let target=node;\n   for(let i=0;i<4&&target.parentElement;i++){\n    const parent=target.parentElement,words=text(parent);\n    if(words.length>440||parent.querySelector('[data-mh-native-install=\"yes\"]'))break;\n    if(chromeLinks.some(re=>re.test(words))){target=parent;break}\n    target=parent;\n   }\n   target.dataset.mhChromeBannerHidden='yes';\n   target.style.setProperty('display','none','important');\n  }\n };\n const update=()=>{\n  if(!detail())return;\n  if(location.pathname!==lastPath){lastPath=location.pathname;installed=false}\n  const b=findButton();\n  if(b){\n   b.dataset.mhNativeInstall='yes';\n   if(b.disabled)b.disabled=false;\n   if(b.hasAttribute('disabled'))b.removeAttribute('disabled');\n   if(b.getAttribute('aria-disabled')==='true'&&!installed)b.setAttribute('aria-disabled','false');\n   b.style.setProperty('pointer-events','auto','important');\n   b.style.setProperty('cursor',installed?'default':'pointer','important');\n   b.style.setProperty('opacity','1','important');\n   b.style.setProperty('background-color',installed?'#23784d':'#0b57d0','important');\n   b.style.setProperty('color','#fff','important');\n   if(installed){if(text(b)!=='Installed in MH Browser')b.textContent='Installed in MH Browser';b.setAttribute('aria-disabled','true')}\n   else{if(text(b)!=='Add to MH Browser')b.textContent='Add to MH Browser';b.title='Install directly in MH Browser, without Google Chrome'}\n  }\n  hideChromeBanner();\n };\n if(!window.__mhNativeStoreInstall){\n  window.__mhNativeStoreInstall=true;\n  document.addEventListener('click',e=>{\n   const b=e.target?.closest?.('[data-mh-native-install=\"yes\"]');\n   if(!b||!detail())return;\n   e.preventDefault();e.stopImmediatePropagation();\n   if(!installed)window.open('mh-browser-extension://install','_blank');\n  },true);\n  window.addEventListener('mh-extension-installed',()=>{installed=true;update()});\n  let pending=false;\n  const observer=new MutationObserver(()=>{\n   if(pending)return;pending=true;\n   setTimeout(()=>{pending=false;update()},250);\n  });\n  observer.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['disabled','aria-disabled']});\n  window.addEventListener('popstate',()=>setTimeout(update,80));\n }\n update();\n}catch(e){console.debug('MH Browser Chrome Web Store integration:',e)}\n})()";}
 module.exports={overlayScript};
