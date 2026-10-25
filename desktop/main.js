@@ -212,6 +212,7 @@ case 'install-webstore':{
   if(!Array.isArray(state.extensions))state.extensions=[];
   if(!state.extensions.includes(prepared.dest))state.extensions.push(prepared.dest);
   save();send('extensions',extensionList());
+  if(!t.view.webContents.isDestroyed())t.view.webContents.executeJavaScript("window.dispatchEvent(new Event('mh-extension-installed'))",true).catch(()=>{});
   return{id:ext.id,name:ext.name,version:ext.version}
  }finally{if(prepared?.temp)fs.rmSync(prepared.temp,{recursive:true,force:true})}
 }
