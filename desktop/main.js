@@ -181,7 +181,7 @@ case 'media-formats':{
  const candidates=[...(t.mediaCandidates?.values()||[])];
  try{const elements=await t.view.webContents.executeJavaScript('Array.from(document.querySelectorAll("video,audio,source")).map(e=>({url:e.currentSrc||e.src||"",mime:e.type||""})).filter(e=>e.url.startsWith("http"))',true);for(const e of elements){const candidate=media.discover({...e,referer:t.url});if(candidate)candidates.push(candidate)}}catch{}
  const result=await media.formats({candidates,referer:t.url,pageTitle:t.title}),url=t.url,id=t.id;
- result.pending=siteMedia.eligible(url)&&t.siteMediaCache?.url!==url;
+ result.pending=siteMedia.eligible(url)&&(t.siteMediaCache?.url!==url||!!t.siteMediaCache?.data?.error&&Date.now()-(t.siteMediaCache.at||0)>=20000);
  const valid=()=>t.url===url&&tabs.has(id);
  const merge=(extra,{title,pending,error}={})=>{if(!valid())return;const base=t.latestMediaResult||result,seen=new Set(),choices=[...(extra||[]),...(base.choices||[])].filter(c=>{const key=c.kind+':'+c.url+':'+(c.height||'');if(seen.has(key))return false;seen.add(key);return true});const updated={...base,choices,title:title||base.title,pending:pending===undefined?base.pending:pending};if(error&&!choices.length)updated.error=error;else delete updated.error;t.latestMediaResult=updated;t.allowedMediaChoices=new Set(choices.map(c=>c.url));send('media-updated',{tabId:id,url,result:updated})};
  t.latestMediaResult=result;t.allowedMediaChoices=new Set(result.choices.map(c=>c.url));
