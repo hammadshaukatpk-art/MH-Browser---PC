@@ -22,7 +22,7 @@ function sessionCookieFile(cookies=[]){
  const file=path.join(dir,'cookies.txt');
  const lines=['# Netscape HTTP Cookie File',...safe.map(c=>{
   const domain=String(c.domain);
-  return [domain,domain.startsWith('.')?'TRUE':'FALSE',c.path||'/',c.secure?'TRUE':'FALSE',c.expirationDate?Math.floor(c.expirationDate):0,c.httpOnly?'#HttpOnly_'+c.name:c.name,c.value].join('\t');
+  return [c.httpOnly?'#HttpOnly_'+domain:domain,domain.startsWith('.')?'TRUE':'FALSE',c.path||'/',c.secure?'TRUE':'FALSE',c.expirationDate?Math.floor(c.expirationDate):0,c.name,c.value].join('\t');
  })];
  try{fs.writeFileSync(file,lines.join('\n')+'\n',{encoding:'utf8',mode:0o600});return{dir,file}}catch(e){fs.rmSync(dir,{recursive:true,force:true});throw e}
 }
