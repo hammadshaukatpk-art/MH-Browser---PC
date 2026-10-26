@@ -9,6 +9,11 @@ assert.equal(store.extensionIdFromURL('https://chromewebstore.google.com/detail/
 assert.equal(store.extensionIdFromURL('https://evil.example/detail/name/'+id),null);
 assert.equal(store.extensionIdFromURL('https://chromewebstore.google.com/category/extensions'),null);
 assert.equal(store.extensionIdFromURL('javascript:alert(1)'),null);
+assert.equal(store.englishStoreURL('https://chromewebstore.google.com/detail/volume-booster/'+id+'?hl=pt-BR'),'https://chromewebstore.google.com/detail/volume-booster/'+id+'?hl=en');
+assert.equal(store.englishStoreURL('https://chromewebstore.google.com/detail/volume-booster/'+id+'?hl=en'),'https://chromewebstore.google.com/detail/volume-booster/'+id+'?hl=en');
+assert.equal(store.englishStoreURL('https://chromewebstore.google.com/category/extensions?hl=de&sort=popular'),'https://chromewebstore.google.com/category/extensions?hl=en&sort=popular');
+assert.equal(store.englishStoreURL('https://www.youtube.com/watch?v=abc&hl=pt-BR'),'https://www.youtube.com/watch?v=abc&hl=pt-BR');
+assert.equal(store.englishStoreURL('chrome-extension://'+id+'/popup.html'),'chrome-extension://'+id+'/popup.html');
 const zip=new AdmZip();
 zip.addFile('manifest.json',Buffer.from(JSON.stringify({name:'CI Test Extension',version:'1.0.0',manifest_version:3})));
 zip.addFile('content.js',Buffer.from('console.log("test");'));
