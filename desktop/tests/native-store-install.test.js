@@ -1,0 +1,17 @@
+'use strict';
+const assert=require('node:assert/strict');
+const fs=require('node:fs'),path=require('node:path');
+const root=path.resolve(__dirname,'..');
+const html=fs.readFileSync(path.join(root,'ui/index.html'),'utf8');
+const ui=fs.readFileSync(path.join(root,'ui/app.js'),'utf8');
+const main=fs.readFileSync(path.join(root,'main.js'),'utf8');
+assert.match(html,/<button id="storeInstall"[^>]*hidden[^>]*>\+ Add to MH Browser<\/button>/);
+assert.match(ui,/\$\('storeInstall'\)\.onclick=installCurrentStoreExtension/);
+assert.match(ui,/const available=!!id&&!t\.private/);
+assert.match(ui,/storeInstalledIds\.has\(id\)/);
+assert.match(ui,/call\('install-webstore'\)/);
+assert.match(ui,/window\.mh\.on\('tabs',s=>\{snapshot=s;renderTabs\(\);syncStoreInstallButton\(\)/);
+assert.match(main,/case 'install-webstore':/);
+assert.match(main,/chromeStore\.prepareExtension/);
+assert.doesNotMatch(main,/storeUI\.overlayScript\(/,'Do not modify Google-owned store buttons');
+console.log('Native Chrome Web Store toolbar integration checks passed');
