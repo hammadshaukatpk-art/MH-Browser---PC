@@ -78,6 +78,7 @@ jobs:
           node --check navigation-smoke.js
           node --check ui/app.js
           node tests/chrome-store.test.js
+          node tests/native-store-install.test.js
           node tests/store-ui.test.js
           node tests/site-media.test.js
           if (-not (Test-Path 'ui/assets/mh-logo-clean.png')) { throw 'Missing MH logo' }
