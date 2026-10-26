@@ -169,3 +169,9 @@ body.light #pipButton{color:#16365b;background:#e3f0ff;border-color:#237dd1}
 #storeInstall:disabled{opacity:.65;cursor:wait}
 body.light #storeInstall{background:#dff1ff;color:#123b5a;border-color:#1e80ba}
 @media(max-width:1050px){#storeInstall{min-width:70px!important;padding:0 5px;font-size:10px!important}}
+
+/* Native Chrome Web Store installation control: never modify Google's page DOM. */
+#storeInstall{flex:none;min-width:0;height:34px;padding:0 11px;border:1px solid var(--accent);border-radius:9px;background:var(--accent);color:#fff;font-size:12px;font-weight:600;white-space:nowrap}
+#storeInstall:hover:not(:disabled){filter:brightness(1.1)}
+#storeInstall:disabled{cursor:default;opacity:.75}
+@media(max-width:950px){#storeInstall{font-size:11px;padding-inline:7px}}
