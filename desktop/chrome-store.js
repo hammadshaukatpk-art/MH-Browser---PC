@@ -12,6 +12,17 @@ function extensionIdFromURL(raw){
   return m?m[1].toLowerCase():null;
  }catch{return null}
 }
+// Normalize only Chrome Web Store pages. Leave all other websites and
+// extension resources untouched, including their existing query parameters.
+function englishStoreURL(raw){
+ try{
+  const u=new URL(raw);
+  if(u.protocol!=='https:'||u.hostname!=='chromewebstore.google.com')return raw;
+  if(u.searchParams.get('hl')==='en')return raw;
+  u.searchParams.set('hl','en');
+  return u.href;
+ }catch{return raw}
+}
 function trustedDownloadURL(raw){
  const u=new URL(raw);
  return u.protocol==='https:'&&['google.com','googleusercontent.com','gvt1.com','googleapis.com'].some(d=>u.hostname===d||u.hostname.endsWith('.'+d));
@@ -139,4 +150,4 @@ async function prepareExtension({id,userData,chromeVersion}){
   return{temp,dest,manifest};
  }catch(e){fs.rmSync(temp,{recursive:true,force:true});throw e}
 }
-module.exports={extensionIdFromURL,prepareExtension,_extractZipBytes:extractZipBytes,_unpack:unpack,_verifyCrx3:verifyCrx3,_extensionIdFromKey:extensionIdFromKey};
+module.exports={extensionIdFromURL,englishStoreURL,prepareExtension,_extractZipBytes:extractZipBytes,_unpack:unpack,_verifyCrx3:verifyCrx3,_extensionIdFromKey:extensionIdFromKey};
