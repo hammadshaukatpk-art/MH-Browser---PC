@@ -14,7 +14,7 @@ npm install
 npm run dist
 ```
 
-The unsigned Windows installer is written to `desktop/dist/MH-Browser-Setup-1.1.6.exe` when packaging succeeds.
+The unsigned Windows installer is written to `desktop/dist/MH-Browser-Setup-1.1.7.exe` when packaging succeeds.
 
 ## Chrome Web Store integration (v1.1.5)
 
@@ -127,3 +127,10 @@ The existing Android application and source are the functional reference; do not
 - Uses the signed-in MH Browser session's matching site cookies for website-format lookup and download in a temporary local cookie file, removed after the operation. No password extraction, external cookie upload, or bypass of access restrictions is implemented.
 - Prevents raw yt-dlp error dumps from replacing available media choices, and retries transient lookup failures after 20 seconds.
 - Website bot checks, login requirements, DRM and rate limiting can still prevent some downloads; this release does not guarantee downloads from every YouTube video.
+
+## v1.1.7 extension language and popup stability
+
+- MH Browser now defaults to English (United States) at the Chromium process, tab user-agent language and HTTP Accept-Language layers. Chrome Web Store navigation normalizes its hl parameter to English; unrelated sites and extension resources are not rewritten.
+- Chrome Web Store installs continue directly into MH Browser without requiring a Google Chrome installation. The original store install control is used, not an added floating button.
+- The Windows CI now verifies that a locally loaded extension popup renders real HTML instead of a blank/image-only view. This checks Electron's basic popup rendering; it cannot guarantee every Chrome extension's scripts or audio-processing APIs are supported.
+- Media downloader logic is unchanged from v1.1.6.
